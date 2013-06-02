@@ -46,6 +46,46 @@ class DB(object):
         else:
             raise DBError("Relation %s not known" % relation)
 
+class DBLock(object):
+    def __init__(self, db, locktype, *relations):
+        self._db = db
+        self._locktype = {
+            'r': 'READ',
+            'w': 'WRITE',
+            'rw': 'READ WRITE',
+            'read': 'READ',
+            'write': 'WRITE',
+            'read write': 'READ WRITE',
+            'write read': 'READ WRITE',
+        }[locktype.lower()]
+        self._relations = relations
+    def __enter__(self):
+        relations = self._get_relations()
+        sql = 'LOCK TABLES %s' % ', '.join(["%s %s" % (r, self._locktype) for r in relations])
+        print sql
+        cursor = self._db.create_cursor()
+        try:
+            cursor.execute(sql)
+            self._db.commit()
+        finally:
+            cursor.close()
+        return self
+    def __exit__(self, type, value, traceback):
+        self._db.commit()
+        cursor = self._db.create_cursor()
+        try:
+            cursor.execute('UNLOCK TABLES')
+        finally:
+            cursor.close()
+    def _get_relations(self):
+        rels = []
+        for rel in self._relations:
+            if isinstance(rel, DBObjectBase):
+                rels.append(rel.name)
+            else:
+                rels.append(rel)
+        return rels
+
 class DBError(Exception):
     pass
 
