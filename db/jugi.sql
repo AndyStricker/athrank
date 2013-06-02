@@ -15,8 +15,7 @@ CREATE  TABLE IF NOT EXISTS `jugi`.`Section` (
   `id_section` INT NOT NULL ,
   `name` TEXT NOT NULL ,
   `canton` CHAR(2) NULL ,
-  PRIMARY KEY (`id_section`) ,
-  UNIQUE INDEX `name_UNIQUE` (`name` ASC) )
+  PRIMARY KEY (`id_section`) )
 ENGINE = InnoDB
 DEFAULT CHARACTER SET = utf8;
 
@@ -27,7 +26,7 @@ DEFAULT CHARACTER SET = utf8;
 DROP TABLE IF EXISTS `jugi`.`Athlete` ;
 
 CREATE  TABLE IF NOT EXISTS `jugi`.`Athlete` (
-  `id_athlete` INT NOT NULL ,
+  `id_athlete` INT NOT NULL AUTO_INCREMENT ,
   `number` INT NOT NULL DEFAULT 0 ,
   `firstname` TEXT NOT NULL ,
   `lastname` TEXT NOT NULL ,
