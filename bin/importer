@@ -1,0 +1,10 @@
+#!/usr/bin/env python
+
+import sys
+import jugi.importer
+import jugi.db
+
+db = jugi.db.DB()
+
+importer = jugi.importer.CSVImporter(db)
+importer.read(sys.argv[1])
