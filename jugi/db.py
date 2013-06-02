@@ -201,6 +201,18 @@ class Athlete(DBObjectBase):
     def __init__(self, db, **kwargs):
         super(Athlete, self).__init__(db, **kwargs)
 
+    def get_section(self):
+        id_section = self['section']
+        section = self.db.create('Section')
+        section.fetch_id(id_section)
+        return section
+
+    def get_category(self):
+        id_category = (self['category'], self['year_of_birth'])
+        category = self.db.create('Category')
+        category.fetch_id(*id_category)
+        return category
+
 class Section(DBObjectBase):
     NAME = 'Section'
     ID_FIELD = 'id_section'
