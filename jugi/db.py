@@ -41,6 +41,8 @@ class DB(object):
             return Athlete(self)
         elif relation.lower() == 'section':
             return Section(self)
+        elif relation.lower() == 'category':
+            return Category(self)
         else:
             raise DBError("Relation %s not known" % relation)
 
@@ -209,4 +211,17 @@ class Section(DBObjectBase):
     )
     def __init__(self, db, **kwargs):
         super(Section, self).__init__(db, **kwargs)
+
+class Category(DBObjectBase):
+    NAME = 'Category'
+    ID_FIELD = ('category', 'age_cohort')
+    FIELDS = (
+        'category',
+        'age_cohort',
+        'age',
+        'category_code',
+        'sex',
+    )
+    def __init__(self, db, **kwargs):
+        super(Category, self).__init__(db, **kwargs)
 
