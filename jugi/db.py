@@ -115,9 +115,14 @@ class DBObjectBase(dict):
         sql = 'UPDATE `%s` SET (%s)' % (self.name, sql_fields)
         if where:
             sql += ' WHERE %s' % where
+        return sql
 
-    def fetch_id(self, itemid):
-        sql = self.sql_fetch_where('%s = %%s' % self.id_field)
+    def fetch_id(self, *itemid):
+        if isinstance(self.id_field, tuple):
+            id_field = self.id_field
+        else:
+            id_field = (self.id_field, )
+        sql = self.sql_fetch_where(' AND '.join(["%s = %%s" % f for f in id_field]))
         cursor = self.db.create_cursor()
         try:
             cursor.execute(sql, itemid)
