@@ -157,15 +157,30 @@ class DBObjectBase(dict):
             sql += ' WHERE %s' % where
         return sql
 
-    def fetch_id(self, *itemid):
-        if isinstance(self.id_field, tuple):
+    def _build_primary_key_expr(self):
+        if isinstance(self.id_field, (tuple, list)):
             id_field = self.id_field
         else:
             id_field = (self.id_field, )
-        sql = self.sql_fetch_where(' AND '.join(["%s = %%s" % f for f in id_field]))
+        return ' AND '.join(["%s = %%s" % f for f in id_field])
+
+    def _build_primary_key_values(self, itemid=None):
+        if isinstance(self.id_field, (tuple, list)):
+            if itemid is None:
+                itemid = [self[k] for k in self.id_field]
+            return itemid
+        else:
+            if itemid is None:
+                itemid = self[self.id_field]
+            return [itemid]
+
+    def fetch_id(self, *itemid):
+        sql = self.sql_fetch_where(self._build_primary_key_expr())
+        values = self._build_primary_key_values(itemid)
+        print 'FETCH: ', repr(values)
         cursor = self.db.create_cursor()
         try:
-            cursor.execute(sql, itemid)
+            cursor.execute(sql, values)
             item = cursor.next()
             for k, v in zip(self.fields, item):
                 self[k] = self._decode(v)
@@ -201,21 +216,25 @@ class DBObjectBase(dict):
             c.close()
 
     def update(self, fields=None):
-        where = '%s = %%s' % self.id_field
+        where = self._build_primary_key_expr()
         if fields:
-            update_fields = filter(lambda x: x in fields), 
-            sql = self.sql_update(where, update_fields), 
+            update_fields = filter(lambda x: x in fields, self.fields)
+            sql = self.sql_update(where, update_fields)
         else:
             update_fields = self.fields
-            sql = self.sql_update(where), 
+            sql = self.sql_update(where)
         values = [self._encode(self[f]) for f in update_fields]
+        print sql
+        primary_key = self._build_primary_key_values()
+        values.extend(primary_key)
+        print repr(values)
 
         c = self.db.create_cursor()
         try:
             c.execute(sql, values)
         finally:
             c.close()
-            
+
 
 class Athlete(DBObjectBase):
     NAME = 'Athlete'
