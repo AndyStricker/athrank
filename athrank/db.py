@@ -53,11 +53,11 @@ class DB(object):
     def create(self, relation):
         """ Factory for relation objects """
         if relation.lower() == 'athlete':
-            return Athlete(self)
+            return Athlete()
         elif relation.lower() == 'section':
-            return Section(self)
+            return Section()
         elif relation.lower() == 'category':
-            return Category(self)
+            return Category()
         else:
             raise DBError("Relation %s not known" % relation)
 
@@ -146,5 +146,3 @@ class Athlete(object):
         Category.age_cohort,
         year_of_birth
     )
-        
-
