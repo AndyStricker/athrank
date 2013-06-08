@@ -1,4 +1,6 @@
 from storm.locals import *
+import storm.tracer
+import sys
 
 class DB(object):
     def __init__(self):
