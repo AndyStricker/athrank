@@ -1,4 +1,5 @@
 import csv, codecs
+import athrank.db
 
 class UTF8Recoder:
     """
@@ -56,13 +57,12 @@ class CSVImporter(object):
         
     def __init__(self, db):
         self._db = db
-        self._sections = self._create_section_lookup_table()
+        self._sections = None
 
     def _create_section_lookup_table(self):
         table = {}
-        section_fetcher = self.db.create('Section')
-        for section in section_fetcher.fetch_all():
-            table[section['name']] = section['id_section']
+        for section in self.db.store.find(athrank.db.Section):
+            table[section.name] = section.id_section
         return table
 
     @property
@@ -71,6 +71,8 @@ class CSVImporter(object):
 
     @property
     def sections(self):
+        if not self._sections:
+            self._sections = self._create_section_lookup_table()
         return self._sections
 
     def read(self, filename):
@@ -79,6 +81,7 @@ class CSVImporter(object):
         self._check_header(header)
         for record in reader:
             self._insert(record)
+        self.db.store.commit()
 
     def _check_header(self, header):
         for n in xrange(0, self.CHECK_HEADER_MAX):
@@ -89,18 +92,20 @@ class CSVImporter(object):
         
     def _insert(self, record):
         athlete = self.db.create('athlete')
-        for field, idx in self.FIELDS.iteritems():
-            athlete[field] = record[idx]
-        athlete['section'] = self._section_to_id(athlete['section'])
-        athlete['sex'] = self._convert_sex(athlete['sex'])
-        athlete['year_of_birth'] = int(athlete['year_of_birth'])
-        athlete['category_code'] = athlete['category'][1]
-        print repr(athlete)
-        athlete.insert(athlete.keys())
-        self.db.commit()
+        athlete.firstname = self._get_record_field(record, 'firstname')
+        athlete.lastname = self._get_record_field(record, 'lastname')
+        athlete.category = self._get_record_field(record, 'category')
+        athlete.section = self._section_to_id(self._get_record_field(record, 'section'))
+        athlete.sex = self._convert_sex(self._get_record_field(record, 'sex'))
+        athlete.year_of_birth = int(self._get_record_field(record, 'year_of_birth'))
+        athlete.category_code = self._get_record_field(record, 'category')[1]
+        self.db.store.add(athlete)
+
+    def _get_record_field(self, record, name):
+        return record[self.FIELDS[name]]
 
     def _section_to_id(self, name):
-        return self._sections[name]
+        return self.sections[name]
 
     def _convert_sex(self, v):
-        return {'k':'m', 'm': 'w'}[v.lower()]
+        return {'k':'m', 'm': 'f'}[v.lower()]
