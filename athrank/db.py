@@ -33,6 +33,9 @@ class DB(object):
             self._store = Store(self.connection)
         return self._store
 
+    def enable_debug(self):
+        storm.tracer.debug(True, stream=sys.stderr)
+
     def _buildurl(self):
         cfg = self.config.copy()
         cfg['credentials'] = cfg['user']
