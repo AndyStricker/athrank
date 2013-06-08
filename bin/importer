@@ -3,10 +3,10 @@
 import os
 import sys
 sys.path.append(os.getcwd())
-import jugi.importer
-import jugi.db
+import athrank.importer
+import athrank.db
 
-db = jugi.db.DB()
+db = athrank.db.DB()
 
-importer = jugi.importer.CSVImporter(db)
+importer = athrank.importer.CSVImporter(db)
 importer.read(sys.argv[1])
