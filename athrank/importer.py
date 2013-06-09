@@ -240,7 +240,7 @@ class CSVJuweImporter(CSVImporter):
         athlete.year_of_birth = to_year(int(data['year_of_birth'])) + self._add_to_year
         athlete.category_code = data['category'][1]
 
-        to_result = lambda r: decimal.Decimal(r) if len(r) > 0 else 0
+        to_result = lambda r: decimal.Decimal(r) if len(r) > 0 else None
         athlete.sprint_result = to_result(data['sprint_result'])
         athlete.longjump_result = to_result(data['longjump_result'])
         athlete.highjump_result = to_result(data['highjump_result'])
