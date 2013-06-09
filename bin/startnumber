@@ -1,0 +1,42 @@
+#!/usr/bin/env python
+
+import os
+import sys
+sys.path.append(os.getcwd())
+import argparse
+import athrank.startnumber
+import athrank.db
+
+parser = argparse.ArgumentParser(description='Assign start numbers')
+parser.add_argument(
+    '--from-id',
+        action='store_true',
+        default=False,
+        dest='from_id',
+        help="Set start number equal to id"
+)
+parser.add_argument(
+    '--start', metavar='N',
+        type=int,
+        dest='start',
+        help="Assign number starting from this number"
+)
+parser.add_argument(
+    '--override-assigned',
+        action='store_true',
+        dest='override_assigned',
+        default=False,
+        help="Override already assigned numbers"
+)
+args = parser.parse_args()
+
+db = athrank.db.DB()
+
+if args.from_id:
+    athrank.startnumber.assign_start_number_from_id(db)
+else:
+    skip_assigned = not args.override_assigned
+    athrank.startnumber.assign_start_number_sequential(
+        db, start=args.start, skip_assigned=skip_assigned
+    )
+
