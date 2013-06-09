@@ -43,5 +43,11 @@ class RankingReport(Report):
         for category in db_categories:
             category_set.add(category.category)
         categories = list(category_set)
-        categories.sort()
+        def category_cmp(a, b):
+            s = cmp(a[0], b[0])
+            if s != 0:
+                return -1 * s
+            else:
+                return cmp(a[1:], b[1:])
+        categories.sort(cmp=category_cmp)
         return categories
