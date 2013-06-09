@@ -75,7 +75,7 @@ CREATE  TABLE IF NOT EXISTS `jugi`.`Athlete` (
   INDEX `categorycode_idx` (`category_code` ASC) ,
   INDEX `fk_Athlete_Section` (`section` ASC) ,
   INDEX `fk_Athlete_Category` (`category` ASC, `year_of_birth` ASC) ,
-  UNIQUE INDEX `rank_UNIQUE` (`rank` ASC) ,
+  UNIQUE INDEX `rank_category_UNIQUE` (`rank` ASC, `category` ASC) ,
   CONSTRAINT `fk_Athlete_Section`
     FOREIGN KEY (`section` )
     REFERENCES `jugi`.`Section` (`id_section` )
