@@ -31,6 +31,11 @@ CREATE  TABLE IF NOT EXISTS `jugi`.`Category` (
   `age` INT NULL ,
   `category_code` ENUM('J','A','B','C','D','E','F') NULL ,
   `sex` ENUM('f','m') NULL ,
+  `sprint_distance` DECIMAL(5,0) NULL DEFAULT 0 ,
+  `has_longjump` TINYINT(1) NULL ,
+  `has_highjump` TINYINT(1) NULL ,
+  `has_shotput` TINYINT(1) NULL ,
+  `has_ball` TINYINT(1) NULL ,
   PRIMARY KEY (`category`, `age_cohort`) )
 ENGINE = InnoDB;
 
@@ -58,16 +63,19 @@ CREATE  TABLE IF NOT EXISTS `jugi`.`Athlete` (
   `sprint_points` INT NULL DEFAULT NULL ,
   `longjump_points` INT NULL DEFAULT NULL ,
   `highjump_points` INT NULL DEFAULT NULL ,
+  `shotput_points` INT NULL ,
   `ball_points` INT NULL DEFAULT NULL ,
   `total_points` INT NOT NULL DEFAULT 0 ,
   `award` ENUM('GOLD','SILVER','BRONZE') NULL DEFAULT NULL ,
   `qualify` TINYINT(1) NOT NULL DEFAULT FALSE ,
+  `rank` INT NULL DEFAULT NULL ,
   PRIMARY KEY (`id_athlete`) ,
   UNIQUE INDEX `number_UNIQUE` (`number` ASC) ,
   INDEX `category_idx` (`category` ASC) ,
   INDEX `categorycode_idx` (`category_code` ASC) ,
   INDEX `fk_Athlete_Section` (`section` ASC) ,
   INDEX `fk_Athlete_Category` (`category` ASC, `year_of_birth` ASC) ,
+  UNIQUE INDEX `rank_UNIQUE` (`rank` ASC) ,
   CONSTRAINT `fk_Athlete_Section`
     FOREIGN KEY (`section` )
     REFERENCES `jugi`.`Section` (`id_section` )
@@ -110,33 +118,35 @@ COMMIT;
 -- -----------------------------------------------------
 START TRANSACTION;
 USE `jugi`;
-INSERT INTO `jugi`.`Category` (`category`, `age_cohort`, `age`, `category_code`, `sex`) VALUES ('MF', 2007, 6, 'F', 'f');
-INSERT INTO `jugi`.`Category` (`category`, `age_cohort`, `age`, `category_code`, `sex`) VALUES ('MF', 2006, 7, 'F', 'f');
-INSERT INTO `jugi`.`Category` (`category`, `age_cohort`, `age`, `category_code`, `sex`) VALUES ('KF', 2007, 6, 'F', 'm');
-INSERT INTO `jugi`.`Category` (`category`, `age_cohort`, `age`, `category_code`, `sex`) VALUES ('KF', 2006, 7, 'F', 'm');
-INSERT INTO `jugi`.`Category` (`category`, `age_cohort`, `age`, `category_code`, `sex`) VALUES ('ME', 2005, 8, 'E', 'f');
-INSERT INTO `jugi`.`Category` (`category`, `age_cohort`, `age`, `category_code`, `sex`) VALUES ('ME', 2004, 9, 'E', 'f');
-INSERT INTO `jugi`.`Category` (`category`, `age_cohort`, `age`, `category_code`, `sex`) VALUES ('KE', 2005, 8, 'E', 'm');
-INSERT INTO `jugi`.`Category` (`category`, `age_cohort`, `age`, `category_code`, `sex`) VALUES ('KE', 2004, 9, 'E', 'm');
-INSERT INTO `jugi`.`Category` (`category`, `age_cohort`, `age`, `category_code`, `sex`) VALUES ('MD', 2003, 10, 'D', 'f');
-INSERT INTO `jugi`.`Category` (`category`, `age_cohort`, `age`, `category_code`, `sex`) VALUES ('MD', 2002, 11, 'D', 'f');
-INSERT INTO `jugi`.`Category` (`category`, `age_cohort`, `age`, `category_code`, `sex`) VALUES ('KD', 2003, 10, 'D', 'm');
-INSERT INTO `jugi`.`Category` (`category`, `age_cohort`, `age`, `category_code`, `sex`) VALUES ('KD', 2002, 11, 'D', 'm');
-INSERT INTO `jugi`.`Category` (`category`, `age_cohort`, `age`, `category_code`, `sex`) VALUES ('MC', 2001, 12, 'C', 'f');
-INSERT INTO `jugi`.`Category` (`category`, `age_cohort`, `age`, `category_code`, `sex`) VALUES ('MC', 2000, 13, 'C', 'f');
-INSERT INTO `jugi`.`Category` (`category`, `age_cohort`, `age`, `category_code`, `sex`) VALUES ('KC', 2001, 12, 'C', 'm');
-INSERT INTO `jugi`.`Category` (`category`, `age_cohort`, `age`, `category_code`, `sex`) VALUES ('KC', 2000, 13, 'C', 'm');
-INSERT INTO `jugi`.`Category` (`category`, `age_cohort`, `age`, `category_code`, `sex`) VALUES ('MB', 1999, 14, 'B', 'f');
-INSERT INTO `jugi`.`Category` (`category`, `age_cohort`, `age`, `category_code`, `sex`) VALUES ('MB', 1998, 15, 'B', 'f');
-INSERT INTO `jugi`.`Category` (`category`, `age_cohort`, `age`, `category_code`, `sex`) VALUES ('KB', 1999, 14, 'B', 'm');
-INSERT INTO `jugi`.`Category` (`category`, `age_cohort`, `age`, `category_code`, `sex`) VALUES ('KB', 1998, 15, 'B', 'm');
-INSERT INTO `jugi`.`Category` (`category`, `age_cohort`, `age`, `category_code`, `sex`) VALUES ('MA', 1997, 16, 'A', 'f');
-INSERT INTO `jugi`.`Category` (`category`, `age_cohort`, `age`, `category_code`, `sex`) VALUES ('MA', 1996, 17, 'A', 'f');
-INSERT INTO `jugi`.`Category` (`category`, `age_cohort`, `age`, `category_code`, `sex`) VALUES ('KA', 1997, 16, 'A', 'm');
-INSERT INTO `jugi`.`Category` (`category`, `age_cohort`, `age`, `category_code`, `sex`) VALUES ('KA', 1996, 17, 'A', 'm');
-INSERT INTO `jugi`.`Category` (`category`, `age_cohort`, `age`, `category_code`, `sex`) VALUES ('MJ', 1995, 18, 'J', 'f');
-INSERT INTO `jugi`.`Category` (`category`, `age_cohort`, `age`, `category_code`, `sex`) VALUES ('MJ', 1994, 19, 'J', 'f');
-INSERT INTO `jugi`.`Category` (`category`, `age_cohort`, `age`, `category_code`, `sex`) VALUES ('KJ', 1995, 18, 'J', 'm');
-INSERT INTO `jugi`.`Category` (`category`, `age_cohort`, `age`, `category_code`, `sex`) VALUES ('KJ', 1994, 19, 'J', 'm');
+INSERT INTO `jugi`.`Category` (`category`, `age_cohort`, `age`, `category_code`, `sex`, `sprint_distance`, `has_longjump`, `has_highjump`, `has_shotput`, `has_ball`) VALUES ('MF', 2007, 6, 'F', 'f', 50, 1, 0, 0, 1);
+INSERT INTO `jugi`.`Category` (`category`, `age_cohort`, `age`, `category_code`, `sex`, `sprint_distance`, `has_longjump`, `has_highjump`, `has_shotput`, `has_ball`) VALUES ('MF', 2006, 7, 'F', 'f', 50, 1, 0, 0, 1);
+INSERT INTO `jugi`.`Category` (`category`, `age_cohort`, `age`, `category_code`, `sex`, `sprint_distance`, `has_longjump`, `has_highjump`, `has_shotput`, `has_ball`) VALUES ('KF', 2007, 6, 'F', 'm', 50, 1, 0, 0, 1);
+INSERT INTO `jugi`.`Category` (`category`, `age_cohort`, `age`, `category_code`, `sex`, `sprint_distance`, `has_longjump`, `has_highjump`, `has_shotput`, `has_ball`) VALUES ('KF', 2006, 7, 'F', 'm', 50, 1, 0, 0, 1);
+INSERT INTO `jugi`.`Category` (`category`, `age_cohort`, `age`, `category_code`, `sex`, `sprint_distance`, `has_longjump`, `has_highjump`, `has_shotput`, `has_ball`) VALUES ('ME', 2005, 8, 'E', 'f', 50, 1, 0, 0, 1);
+INSERT INTO `jugi`.`Category` (`category`, `age_cohort`, `age`, `category_code`, `sex`, `sprint_distance`, `has_longjump`, `has_highjump`, `has_shotput`, `has_ball`) VALUES ('ME', 2004, 9, 'E', 'f', 50, 1, 0, 0, 1);
+INSERT INTO `jugi`.`Category` (`category`, `age_cohort`, `age`, `category_code`, `sex`, `sprint_distance`, `has_longjump`, `has_highjump`, `has_shotput`, `has_ball`) VALUES ('KE', 2005, 8, 'E', 'm', 50, 1, 0, 0, 1);
+INSERT INTO `jugi`.`Category` (`category`, `age_cohort`, `age`, `category_code`, `sex`, `sprint_distance`, `has_longjump`, `has_highjump`, `has_shotput`, `has_ball`) VALUES ('KE', 2004, 9, 'E', 'm', 50, 1, 0, 0, 1);
+INSERT INTO `jugi`.`Category` (`category`, `age_cohort`, `age`, `category_code`, `sex`, `sprint_distance`, `has_longjump`, `has_highjump`, `has_shotput`, `has_ball`) VALUES ('MD', 2003, 10, 'D', 'f', 60, 1, 0, 0, 1);
+INSERT INTO `jugi`.`Category` (`category`, `age_cohort`, `age`, `category_code`, `sex`, `sprint_distance`, `has_longjump`, `has_highjump`, `has_shotput`, `has_ball`) VALUES ('MD', 2002, 11, 'D', 'f', 60, 1, 0, 0, 1);
+INSERT INTO `jugi`.`Category` (`category`, `age_cohort`, `age`, `category_code`, `sex`, `sprint_distance`, `has_longjump`, `has_highjump`, `has_shotput`, `has_ball`) VALUES ('KD', 2003, 10, 'D', 'm', 60, 1, 0, 0, 1);
+INSERT INTO `jugi`.`Category` (`category`, `age_cohort`, `age`, `category_code`, `sex`, `sprint_distance`, `has_longjump`, `has_highjump`, `has_shotput`, `has_ball`) VALUES ('KD', 2002, 11, 'D', 'm', 60, 1, 0, 0, 1);
+INSERT INTO `jugi`.`Category` (`category`, `age_cohort`, `age`, `category_code`, `sex`, `sprint_distance`, `has_longjump`, `has_highjump`, `has_shotput`, `has_ball`) VALUES ('MC', 2001, 12, 'C', 'f', 60, 1, 1, 0, 1);
+INSERT INTO `jugi`.`Category` (`category`, `age_cohort`, `age`, `category_code`, `sex`, `sprint_distance`, `has_longjump`, `has_highjump`, `has_shotput`, `has_ball`) VALUES ('MC', 2000, 13, 'C', 'f', 60, 1, 1, 0, 1);
+INSERT INTO `jugi`.`Category` (`category`, `age_cohort`, `age`, `category_code`, `sex`, `sprint_distance`, `has_longjump`, `has_highjump`, `has_shotput`, `has_ball`) VALUES ('KC', 2001, 12, 'C', 'm', 60, 1, 1, 1, 0);
+INSERT INTO `jugi`.`Category` (`category`, `age_cohort`, `age`, `category_code`, `sex`, `sprint_distance`, `has_longjump`, `has_highjump`, `has_shotput`, `has_ball`) VALUES ('KC', 2000, 13, 'C', 'm', 60, 1, 1, 1, 0);
+INSERT INTO `jugi`.`Category` (`category`, `age_cohort`, `age`, `category_code`, `sex`, `sprint_distance`, `has_longjump`, `has_highjump`, `has_shotput`, `has_ball`) VALUES ('MB', 1999, 14, 'B', 'f', 80, 1, 1, 1, 0);
+INSERT INTO `jugi`.`Category` (`category`, `age_cohort`, `age`, `category_code`, `sex`, `sprint_distance`, `has_longjump`, `has_highjump`, `has_shotput`, `has_ball`) VALUES ('MB', 1998, 15, 'B', 'f', 80, 1, 1, 1, 0);
+INSERT INTO `jugi`.`Category` (`category`, `age_cohort`, `age`, `category_code`, `sex`, `sprint_distance`, `has_longjump`, `has_highjump`, `has_shotput`, `has_ball`) VALUES ('KB', 1999, 14, 'B', 'm', 80, 1, 1, 1, 0);
+INSERT INTO `jugi`.`Category` (`category`, `age_cohort`, `age`, `category_code`, `sex`, `sprint_distance`, `has_longjump`, `has_highjump`, `has_shotput`, `has_ball`) VALUES ('KB', 1998, 15, 'B', 'm', 80, 1, 1, 1, 0);
+INSERT INTO `jugi`.`Category` (`category`, `age_cohort`, `age`, `category_code`, `sex`, `sprint_distance`, `has_longjump`, `has_highjump`, `has_shotput`, `has_ball`) VALUES ('MA', 1997, 16, 'A', 'f', 100, 1, 1, 1, 0);
+INSERT INTO `jugi`.`Category` (`category`, `age_cohort`, `age`, `category_code`, `sex`, `sprint_distance`, `has_longjump`, `has_highjump`, `has_shotput`, `has_ball`) VALUES ('MA', 1996, 17, 'A', 'f', 100, 1, 1, 1, 0);
+INSERT INTO `jugi`.`Category` (`category`, `age_cohort`, `age`, `category_code`, `sex`, `sprint_distance`, `has_longjump`, `has_highjump`, `has_shotput`, `has_ball`) VALUES ('KA', 1997, 16, 'A', 'm', 100, 1, 1, 1, 0);
+INSERT INTO `jugi`.`Category` (`category`, `age_cohort`, `age`, `category_code`, `sex`, `sprint_distance`, `has_longjump`, `has_highjump`, `has_shotput`, `has_ball`) VALUES ('KA', 1996, 17, 'A', 'm', 100, 1, 1, 1, 0);
+INSERT INTO `jugi`.`Category` (`category`, `age_cohort`, `age`, `category_code`, `sex`, `sprint_distance`, `has_longjump`, `has_highjump`, `has_shotput`, `has_ball`) VALUES ('MJ', 1995, 18, 'J', 'f', 100, 1, 1, 1, 0);
+INSERT INTO `jugi`.`Category` (`category`, `age_cohort`, `age`, `category_code`, `sex`, `sprint_distance`, `has_longjump`, `has_highjump`, `has_shotput`, `has_ball`) VALUES ('MJ', 1994, 19, 'J', 'f', 100, 1, 1, 1, 0);
+INSERT INTO `jugi`.`Category` (`category`, `age_cohort`, `age`, `category_code`, `sex`, `sprint_distance`, `has_longjump`, `has_highjump`, `has_shotput`, `has_ball`) VALUES ('KJ', 1995, 18, 'J', 'm', 100, 1, 1, 1, 0);
+INSERT INTO `jugi`.`Category` (`category`, `age_cohort`, `age`, `category_code`, `sex`, `sprint_distance`, `has_longjump`, `has_highjump`, `has_shotput`, `has_ball`) VALUES ('KJ', 1994, 19, 'J', 'm', 100, 1, 1, 1, 0);
+INSERT INTO `jugi`.`Category` (`category`, `age_cohort`, `age`, `category_code`, `sex`, `sprint_distance`, `has_longjump`, `has_highjump`, `has_shotput`, `has_ball`) VALUES ('MF', 2008, 5, 'F', 'f', 50, 1, 0, 0, 1);
+INSERT INTO `jugi`.`Category` (`category`, `age_cohort`, `age`, `category_code`, `sex`, `sprint_distance`, `has_longjump`, `has_highjump`, `has_shotput`, `has_ball`) VALUES ('KF', 2008, 5, 'F', 'm', 50, 1, 0, 0, 1);
 
 COMMIT;
