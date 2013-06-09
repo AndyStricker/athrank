@@ -1,3 +1,4 @@
+import storm.expr
 import athrank.db
 
 DISCIPLINES = [
@@ -21,6 +22,10 @@ class Ranking(object):
     def score_table(self):
         return self._score_table
 
+    def rank(self):
+        self.calculate_points()
+        self.assign_rank()
+
     def calculate_points(self):
         athletes = self.db.store.find(athrank.db.Athlete)
         for athlete in athletes:
@@ -42,6 +47,26 @@ class Ranking(object):
             total_points += points
             setattr(athlete, '%s_points' % discipline, points)
         athlete.total_points = total_points
+
+    def assign_rank(self):
+        self.db.store.execute('UPDATE Athlete SET rank = NULL')
+        for category in self._get_category_list():
+            athletes = self.db.store.find(athrank.db.Athlete, category=category)
+            athletes.order_by(storm.expr.Desc(athrank.db.Athlete.total_points))
+            rank = 1
+            for athlete in athletes:
+                athlete.rank = rank
+                rank += 1
+        self.db.store.commit()
+
+    def _get_category_list(self):
+        db_categories = self.db.store.find(athrank.db.Category)
+        category_set = set()
+        for category in db_categories:
+            category_set.add(category.category)
+        categories = list(category_set)
+        categories.sort()
+        return categories
 
 class ScoreTable(object):
     def calculate_points(self, discipline, category, value):

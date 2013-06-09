@@ -9,5 +9,6 @@ import athrank.db
 db = athrank.db.DB()
 
 ranking = athrank.ranking.Ranking(db, athrank.ranking.ScoreTable94())
-ranking.calculate_points()
+ranking.rank()
+print "successful calculated ranking"
 
