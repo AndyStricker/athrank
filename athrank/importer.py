@@ -230,7 +230,7 @@ class CSVJuweImporter(CSVImporter):
 
         athlete = self.db.create('athlete')
 
-        (firstname, lastname) = data['name'].split(' ', 1)
+        (lastname, firstname) = data['name'].split(' ', 1)
         athlete.firstname = firstname
         athlete.lastname = lastname
         athlete.category = data['category']
