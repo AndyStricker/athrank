@@ -25,6 +25,7 @@ class Ranking(object):
     def rank(self):
         self.calculate_points()
         self.assign_rank()
+        self.assign_awards()
 
     def calculate_points(self):
         athletes = self.db.store.find(athrank.db.Athlete)
@@ -57,6 +58,32 @@ class Ranking(object):
             for athlete in athletes:
                 athlete.rank = rank
                 rank += 1
+        self.db.store.commit()
+
+    def assign_awards(self):
+        self.db.store.execute('UPDATE Athlete SET award = NULL')
+        for category in self._get_category_list():
+            athletes = self.db.store.find(athrank.db.Athlete, category=category)
+            athletes.order_by(athrank.db.Athlete.rank)
+            if athletes.count() == 0:
+                continue
+            awards = [u'GOLD', u'SILVER', u'BRONZE']
+            candidates = [a for a in athletes]
+            while awards and candidates:
+                award = awards.pop(0)
+                candidates[0].award = award
+                if len(candidates) <= 1:
+                    break
+                while candidates[1].total_points == candidates[0].total_points:
+                    candidates.pop(0)
+                    candidates[0].award = award
+                    if awards:
+                        awards.pop()
+                    else:
+                        break
+                    if len(candidates) <= 1:
+                        break
+                candidates.pop(0)
         self.db.store.commit()
 
     def _get_category_list(self):
