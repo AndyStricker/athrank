@@ -26,6 +26,7 @@ class Ranking(object):
         self.calculate_points()
         self.assign_rank()
         self.assign_awards()
+        self.assign_final_qualification()
 
     def calculate_points(self):
         athletes = self.db.store.find(athrank.db.Athlete)
@@ -84,6 +85,40 @@ class Ranking(object):
                     if len(candidates) <= 1:
                         break
                 candidates.pop(0)
+        self.db.store.commit()
+
+    def assign_final_qualification(self):
+        FINAL_PER_CATEGORY = {
+            "KJ": { 'percent': 0.35, 'minimum': 2 },
+            "MJ": { 'percent': 0.35, 'minimum': 2 },
+            "KA": { 'percent': 0.35, 'minimum': 2 },
+            "MA": { 'percent': 0.35, 'minimum': 2 },
+            "KB": { 'percent': 0.35, 'minimum': 2 },
+            "MB": { 'percent': 0.35, 'minimum': 2 },
+            "KC": { 'percent': 0.20, 'minimum': 2 },
+            "MC": { 'percent': 0.20, 'minimum': 2 },
+            "KD": { 'percent': 0.20, 'minimum': 2 },
+            "MD": { 'percent': 0.20, 'minimum': 2 },
+            "KE": { 'percent': 0.20, 'minimum': 2 },
+            "ME": { 'percent': 0.20, 'minimum': 2 },
+            "KF": { 'percent': 0.00, 'minimum': 0 },
+            "MF": { 'percent': 0.00, 'minimum': 0 },
+        }
+
+        self.db.store.execute('UPDATE Athlete SET qualify = FALSE')
+        for category in self._get_category_list():
+            athletes = self.db.store.find(athrank.db.Athlete, category=category)
+            athletes.order_by(storm.expr.Desc(athrank.db.Athlete.total_points))
+            count = athletes.count()
+            percent = FINAL_PER_CATEGORY[category]['percent']
+            minimum = FINAL_PER_CATEGORY[category]['minimum']
+            qualified_number = max(int(count * percent) + 0.4, minimum)
+            print "category:", category, "count:", count, 'percent:', percent, 'qualified:', qualified_number
+            for athlete in athletes:
+                if qualified_number < 1:
+                    break
+                athlete.qualify = True
+                qualified_number -= 1
         self.db.store.commit()
 
     def _get_category_list(self):
