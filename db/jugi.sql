@@ -69,13 +69,13 @@ CREATE  TABLE IF NOT EXISTS `jugi`.`Athlete` (
   `award` ENUM('GOLD','SILVER','BRONZE') NULL DEFAULT NULL ,
   `qualify` TINYINT(1) NOT NULL DEFAULT FALSE ,
   `rank` INT NULL DEFAULT NULL ,
+  `verified` TINYINT(1) NULL DEFAULT FALSE ,
   PRIMARY KEY (`id_athlete`) ,
   UNIQUE INDEX `number_UNIQUE` (`number` ASC) ,
   INDEX `category_idx` (`category` ASC) ,
   INDEX `categorycode_idx` (`category_code` ASC) ,
   INDEX `fk_Athlete_Section` (`section` ASC) ,
   INDEX `fk_Athlete_Category` (`category` ASC, `year_of_birth` ASC) ,
-  UNIQUE INDEX `rank_category_UNIQUE` (`rank` ASC, `category` ASC) ,
   CONSTRAINT `fk_Athlete_Section`
     FOREIGN KEY (`section` )
     REFERENCES `jugi`.`Section` (`id_section` )
