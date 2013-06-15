@@ -146,6 +146,7 @@ class Athlete(object):
     rank = Int()
     award = Unicode()
     qualify = Bool()
+    verified = Bool()
     r_section = Reference(section, Section.id_section)
     r_category = ReferenceSet(
         category,
