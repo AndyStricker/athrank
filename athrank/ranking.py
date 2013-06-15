@@ -47,7 +47,7 @@ class Ranking(object):
         total_points = 0
         for discipline in DISCIPLINES:
             value = getattr(athlete, '%s_result' % discipline)
-            if value is None:
+            if (value is None) or (value == 0.0):
                 points = 0
             else:
                 points = self.score_table.calculate_points(
