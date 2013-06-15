@@ -29,6 +29,15 @@ class Ranking(object):
         self.assign_final_qualification()
 
     def calculate_points(self):
+        self.db.store.execute(
+            'UPDATE Athlete SET ' + ', '.join([
+                'sprint_points = 0',
+                'longjump_points = 0',
+                'highjump_points = 0',
+                'shotput_points = 0',
+                'ball_points = 0',
+            ])
+        )
         athletes = self.db.store.find(athrank.db.Athlete)
         for athlete in athletes:
             self.calculate_points_for_athlete(athlete)
