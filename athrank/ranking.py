@@ -65,8 +65,15 @@ class Ranking(object):
             athletes = self.db.store.find(athrank.db.Athlete, category=category)
             athletes.order_by(storm.expr.Desc(athrank.db.Athlete.total_points))
             rank = 1
+            last_rank = rank
+            last_points = None
             for athlete in athletes:
-                athlete.rank = rank
+                if athlete.total_points == last_points:
+                    athlete.rank = last_rank
+                else:
+                    athlete.rank = rank
+                    last_rank = rank
+                last_points = athlete.total_points
                 rank += 1
         self.db.store.commit()
 
