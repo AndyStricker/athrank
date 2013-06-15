@@ -81,7 +81,7 @@ class Ranking(object):
         self.db.store.execute('UPDATE Athlete SET award = NULL')
         for category in self._get_category_list():
             athletes = self.db.store.find(athrank.db.Athlete, category=category)
-            athletes.order_by(athrank.db.Athlete.rank)
+            athletes.order_by(athrank.db.Athlete.rank, athrank.db.Athlete.number)
             if athletes.count() == 0:
                 continue
             awards = [u'GOLD', u'SILVER', u'BRONZE']
