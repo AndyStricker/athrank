@@ -28,8 +28,12 @@ class RankingReport(Report):
         categories = self._get_category_list()
         rank_lists = []
         for category in categories:
-            ranks = self.db.store.find(athrank.db.Athlete, category=category)
-            ranks.order_by(athrank.db.Athlete.rank)
+            ranks = self.db.store.find(
+                athrank.db.Athlete,
+                athrank.db.Athlete.total_points > 0,
+                category=category
+            )
+            ranks.order_by(athrank.db.Athlete.rank, athrank.db.Athlete.number)
             if ranks.count() > 0:
                 rank_lists.append((category, ranks))
         return {
