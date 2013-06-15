@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-<meta http-equiv='Content-Type' content='text/html; charset=utf-8'>
+<meta http-equiv='Content-Type' content='text/html; charset=utf-8' />
 <title>$title</title>
 <style type="text/css">
 <!--
@@ -9,15 +9,17 @@ body {
   font-family: 'Helvetica', 'Arial', sans-serif;
   font-size: 11pt;
 }
-table { border-collapse: collapse; }
-th, td { padding: 0 2pt; border: 1px solid black; }
-.rank { font-weight: bold; }
-.total .points { font-weight: bold; }
+table { border-collapse: collapse; empty-cells: show; }
+table tr { border: 1px solid black; }
+th, td { padding: 0 0.4em; }
+.rank { font-weight: bold; text-align: center; }
+.total { font-weight: bold; }
 thead .name, thead .section { text-align: left }
 .rank { text-align: right }
 -->
 </style>
 </head>
+<body>
 <h1>$title</h1>
 #for $category, $ranklist in $categories
 <h2>Kategorie $category</h2>
@@ -39,31 +41,32 @@ thead .name, thead .section { text-align: left }
     </tr>
   </thead>
   #for $athlete in $ranklist
-  <tr>
+  <tr class="result">
     <td class="rank">$athlete.rank</td>
     <td class="name">$athlete.lastname $athlete.firstname</td>
     <td class="section">$athlete.r_section.name</td>
     <td class="age_cohort">$athlete.year_of_birth</td>
     <td class="discipline result">$athlete.sprint_result</td>
     <td class="discipline result">$athlete.longjump_result</td>
-    <td class="discipline result">$athlete.highjump_result</td>
-    <td class="discipline result">$athlete.shotput_result</td>
-    <td class="discipline result">$athlete.ball_result</td>
+    <td class="discipline result">#if $athlete.highjump_result then $athlete.highjump_result else ''#</td>
+    <td class="discipline result">#if $athlete.shotput_result then $athlete.shotput_result else ''#</td>
+    <td class="discipline result">#if $athlete.ball_result then $athlete.ball_result else ''#</td>
     <td colspan="3"></td>
   </tr>
-  <tr>
+  <tr class="points">
     <td colspan="4"></td>
     <td class="discipline points">$athlete.sprint_points</td>
     <td class="discipline points">$athlete.longjump_points</td>
-    <td class="discipline points">$athlete.highjump_points</td>
-    <td class="discipline points">$athlete.shotput_points</td>
-    <td class="discipline points">$athlete.ball_points</td>
+    <td class="discipline points">#if $athlete.highjump_result then $athlete.highjump_points else ''#</td>
+    <td class="discipline points">#if $athlete.shotput_result then $athlete.shotput_points else ''#</td>
+    <td class="discipline points">#if $athlete.ball_result then $athlete.ball_points else ''#</td>
     <td class="total points">$athlete.total_points</td>
-    <td class="award">$athlete.award</td>
+    <td class="award">#if $athlete.award then $athlete.award[:1] else ''#</td>
     <td class="qualify">#if $athlete.qualify then "F" else ""#</td>
     <td></td>
   </tr>
   #end for
 </table>
 #end for
+</body>
 </html>
