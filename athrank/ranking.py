@@ -104,36 +104,19 @@ class Ranking(object):
         self.db.store.commit()
 
     def assign_final_qualification(self):
-        FINAL_PER_CATEGORY = {
-            "KJ": { 'percent': 0.35, 'minimum': 2 },
-            "MJ": { 'percent': 0.35, 'minimum': 2 },
-            "KA": { 'percent': 0.35, 'minimum': 2 },
-            "MA": { 'percent': 0.35, 'minimum': 2 },
-            "KB": { 'percent': 0.35, 'minimum': 2 },
-            "MB": { 'percent': 0.35, 'minimum': 2 },
-            "KC": { 'percent': 0.20, 'minimum': 2 },
-            "MC": { 'percent': 0.20, 'minimum': 2 },
-            "KD": { 'percent': 0.20, 'minimum': 2 },
-            "MD": { 'percent': 0.20, 'minimum': 2 },
-            "KE": { 'percent': 0.20, 'minimum': 2 },
-            "ME": { 'percent': 0.20, 'minimum': 2 },
-            "KF": { 'percent': 0.00, 'minimum': 0 },
-            "MF": { 'percent': 0.00, 'minimum': 0 },
-        }
-
         self.db.store.execute('UPDATE Athlete SET qualify = FALSE')
         for category in self._get_category_list():
             athletes = self.db.store.find(athrank.db.Athlete, category=category)
             athletes.order_by(storm.expr.Desc(athrank.db.Athlete.total_points))
-            count = athletes.count()
-            percent = FINAL_PER_CATEGORY[category]['percent']
-            minimum = FINAL_PER_CATEGORY[category]['minimum']
-            qualified_number = max(int(count * percent) + 0.4, minimum)
-            print "category:", category, "count:", count, 'percent:', percent, 'qualified:', qualified_number
+            # percentual or minimum number of athletes to be qualified
+            qualified_number = self.score_table.qualify_count_by_percent(category, athletes.count())
             for athlete in athletes:
-                if qualified_number < 1:
-                    break
-                athlete.qualify = True
+                if qualified_number > 0:
+                    print "Category %s: %s %s qualified by number" % (category, athlete.firstname, athlete.lastname)
+                    athlete.qualify = True
+                if self.score_table.qualified_by_points(category, athlete.total_points):
+                    print "Category %s: %s %s qualified by points" % (category, athlete.firstname, athlete.lastname)
+                    athlete.qualify = True
                 qualified_number -= 1
         self.db.store.commit()
 
@@ -241,4 +224,61 @@ class ScoreTable94(object):
             return 0
         else:
             raise Exception("Invalid category %s" % category)
+
+    # qualification
+    FINAL_PER_CATEGORY = {
+        "KJ": { 'percent': 0.35, 'minimum': 2 },
+        "MJ": { 'percent': 0.35, 'minimum': 2 },
+        "KA": { 'percent': 0.35, 'minimum': 2 },
+        "MA": { 'percent': 0.35, 'minimum': 2 },
+        "KB": { 'percent': 0.35, 'minimum': 2 },
+        "MB": { 'percent': 0.35, 'minimum': 2 },
+        "KC": { 'percent': 0.20, 'minimum': 2 },
+        "MC": { 'percent': 0.20, 'minimum': 2 },
+        "KD": { 'percent': 0.20, 'minimum': 2 },
+        "MD": { 'percent': 0.20, 'minimum': 2 },
+        "KE": { 'percent': 0.20, 'minimum': 2 },
+        "ME": { 'percent': 0.20, 'minimum': 2 },
+        "KF": { 'percent': 0.00, 'minimum': 0 },
+        "MF": { 'percent': 0.00, 'minimum': 0 },
+    }
+
+    def qualify_count_by_percent(self, category, total_athletes):
+        """
+        This resembles the original algorithm from juwe to calculate
+        something similar to the percentual number of athletes allowed
+        per category. There is' also a minimum.
+        """
+        percent = self.FINAL_PER_CATEGORY[category]['percent']
+        minimum = self.FINAL_PER_CATEGORY[category]['minimum']
+        if percent == 0.0 and minimum == 0:
+            return 0
+        qualified_number = max(int(total_athletes * percent) + 0.4, minimum)
+        return qualified_number
+
+    FINAL_BY_POINTS = {
+        "KJ": 1800,
+        "KA": 1800,
+        "KB": 1500,
+        "KC": 1300,
+        "KD": 900,
+        "KE": 700,
+        "KF": None,
+        "MJ": 1700,
+        "MA": 1700,
+        "MB": 1400,
+        "MC": 1300,
+        "MD": 900,
+        "ME": 700,
+        "MF": None,
+    }
+
+    def qualified_by_points(self, category, points):
+        """
+        Athletes reaching a minimum of points are qualified too
+        """
+        limit = self.FINAL_BY_POINTS[category]
+        if limit is None:
+            return False
+        return points >= limit
 
