@@ -37,7 +37,6 @@ thead .name, thead .section { text-align: left }
       <th>Ball</th>
       <th>Punkte</th>
       <th>Ausz.</th>
-      <th>Final</th>
     </tr>
   </thead>
   #for $athlete in $ranklist
@@ -51,7 +50,7 @@ thead .name, thead .section { text-align: left }
     <td class="discipline result">#if $athlete.highjump_result then $athlete.highjump_result else ''#</td>
     <td class="discipline result">#if $athlete.shotput_result then $athlete.shotput_result else ''#</td>
     <td class="discipline result">#if $athlete.ball_result then $athlete.ball_result else ''#</td>
-    <td colspan="3"></td>
+    <td colspan="2"></td>
   </tr>
   <tr class="points">
     <td colspan="4"></td>
@@ -62,11 +61,15 @@ thead .name, thead .section { text-align: left }
     <td class="discipline points">#if $athlete.ball_result then $athlete.ball_points else ''#</td>
     <td class="total points">$athlete.total_points</td>
     <td class="award">#if $athlete.award then $athlete.award[:1] else ''#</td>
-    <td class="qualify">#if $athlete.qualify then "F" else ""#</td>
     <td></td>
   </tr>
   #end for
 </table>
 #end for
+<p>
+Die Teilnehmer die sich für den LA Final am 8.9.2013 in Schaffhausen
+qualifiziert haben, werden durch die LAKO Satus Schweiz ermittelt und
+anfangs Juli informiert.
+</p>
 </body>
 </html>
