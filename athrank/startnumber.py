@@ -11,9 +11,12 @@ def assign_start_number_sequential(db, start=0, skip_assigned=True):
     else:
         db.store.execute('UPDATE Athlete SET number = NULL')
     n = start
-    for athlete in db.store.find(athrank.db.Athlete):
-        n += 1
+    athletes = db.store.find(athrank.db.Athlete)
+    # order by category to improve manual lookup by number
+    athletes.order_by(athrank.db.Athlete.category)
+    for athlete in athletes:
         if skip_assigned and (athlete.number > 0):
             continue
         athlete.number = n
+        n += 1
     db.store.commit()
