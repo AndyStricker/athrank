@@ -19,7 +19,7 @@ class RankingReport(Report):
 
     def create(self):
         path = os.path.join(self._path, self._filename)
-        tmpl = file(path, 'r').read()
+        tmpl = file(path, 'r').read().decode('utf-8')
         ns = self.get_namespace()
         result = Cheetah.Template.Template(tmpl, searchList=[ns])
         return result
