@@ -1,5 +1,6 @@
 from storm.locals import *
 import storm.tracer
+import storm.properties
 import sys
 
 class DB(object):
@@ -154,3 +155,12 @@ class Athlete(object):
         Category.age_cohort,
         year_of_birth
     )
+
+def get_relation_fields(storm_object):
+    return filter(
+        lambda x: isinstance(
+            getattr(storm_object, x), storm.properties.PropertyColumn
+        ),
+        dir(storm_object)
+    )
+

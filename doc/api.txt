@@ -1,0 +1,69 @@
+Athrank RESTful Webservice API
+==============================
+
+Goal
+----
+
+There should be a defined API to read and write the Athrank Database.
+The API should allow web applications and client applications to enter
+data and fetch data.
+
+Using a buzzword, the API composes a Webservice and therefore goes over
+HTTP(S). There are many solutions, some are too complex (SOAP/WSDL)
+while other are a bit loose (serving some XML documents). I choose to
+fully exploit the richness of the HTTP protocol and implement a RESTful
+webservice.
+
+Technical implementation
+------------------------
+
+As presentation layer I primary choose JSON, but it's possible to also
+serialize to XML (e.g. propritary XML dialect or an Atom feed).
+
+API
+---
+
+GET /athletes
+
+    Return all athletes
+
+GET /athletes?{FILTER}
+
+    Return all athletes matching search criteria
+    * firstname={firstname}
+    * lastname={lastname}
+    * section={section}
+    * category={category}
+
+GET /athlete/{id}
+
+    Return all data for athlete with {id}
+
+GET /athlete/number/{number}
+
+    Return all data for athlete with start {number}
+
+POST /athlete
+
+    Add a new athlete, return new id
+
+PUT /athlete/{id}
+
+    Modify athlete {id} data
+
+DELETE /athlete/{id}
+
+    Remove athlete {id}
+
+GET /categories
+
+    Return a list of all categories
+
+GET /category/{category}
+
+    Return data for {category}
+
+GET /sections
+
+    Return a list of all sections
+
