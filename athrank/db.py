@@ -156,6 +156,13 @@ class Athlete(object):
         year_of_birth
     )
 
+    def __init__(self, firstname, lastname, section, year_of_birth, sex):
+        self.firstname = firstname
+        self.lastname = lastname
+        self.section = section
+        self.year_of_birth = year_of_birth
+        self.sex = sex
+
 def get_relation_fields(storm_object):
     return filter(
         lambda x: isinstance(
