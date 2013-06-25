@@ -110,8 +110,8 @@ class CSVAthleteImporter(CSVImporter):
     )
     IMPORT_FIELDS = {
         u"Sektion": 'section',
-        u"Name": 'firstname',
-        u"Vorname": 'lastname',
+        u"Name": 'lastname',
+        u"Vorname": 'firstname',
         u"Jahrgang": 'year_of_birth',
         u"G": 'sex',
         u"Kategorie": 'category',
