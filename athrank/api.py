@@ -11,15 +11,16 @@ import athrank.db
 from web.contrib.template import render_cheetah
 import Cheetah.Template
 
+PREFIX = '/api/v1'
 urls = (
     '/', 'Index',
-    '/athletes(/)?', 'Athletes',
-    '/athlete(/)?', 'Athletes',
-    '/athlete/(\d+)', 'Athlete',
-    '/athlete/number/(\d+)', 'AthleteStartNumber',
-    '/categories', 'Categories',
-    '/category/(\w+)', 'Category',
-    '/sections', 'Sections',
+    PREFIX + '/athletes(/)?', 'Athletes',
+    PREFIX + '/athlete(/)?', 'Athletes',
+    PREFIX + '/athlete/(\d+)', 'Athlete',
+    PREFIX + '/athlete/number/(\d+)', 'AthleteStartNumber',
+    PREFIX + '/categories', 'Categories',
+    PREFIX + '/category/(\w+)', 'Category',
+    PREFIX + '/sections', 'Sections',
 )
 
 class Index:
@@ -55,6 +56,9 @@ class Athletes(AthleteBase):
             query.append(athrank.db.Athlete.lastname == params['lastname'])
         if params.has_key('category') and len(params['category']) > 0:
             query.append(athrank.db.Athlete.category == params['category'])
+        if params.has_key('section') and len(params['section']) > 0:
+            query.append(athrank.db.Athlete.r_section == athrank.db.Section.id_section)
+            query.append(athrank.db.Section.name == params['section'])
         athletes = db.store.find(athrank.db.Athlete, *tuple(query))
         result = []
         for athlete in athletes:
