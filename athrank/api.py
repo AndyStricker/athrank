@@ -23,6 +23,9 @@ urls = (
     PREFIX + '/sections', 'Sections',
 )
 
+def _create_api_path(resource, rid):
+    return '{0}/{1}/{2}'.format(PREFIX, resource, rid)
+
 class Index:
     def GET(self):
         render = render_cheetah('reports/api')
@@ -37,7 +40,7 @@ class AthleteBase(object):
         obj['section'] = athlete.r_section.name
         obj['link'] = {
             'rel': 'self',
-            'href': '/athlete/{0}'.format(obj['id_athlete']),
+            'href': _create_api_path('athlete', obj['id_athlete']),
         }
         return obj
 
@@ -64,7 +67,7 @@ class Athletes(AthleteBase):
         for athlete in athletes:
             result.append(self.get_athlete_dict(athlete))
 
-        web.webapi.header('Content-Type', 'application/json')
+        web.header('Content-Type', 'application/json')
         return json.dumps({
             'count': len(result),
             'result': result,
@@ -77,7 +80,45 @@ class Athlete(AthleteBase):
         if athlete is None:
             raise web.notfound(message='Athlete with this id not found')
         obj = self.get_athlete_dict(athlete)
-        web.webapi.header('Content-Type', 'application/json')
+        web.header('Content-Type', 'application/json')
+        return json.dumps(obj)
+
+    def POST(self):
+        personal_data = web.input('firstname', 'lastname', 'section', 'year_of_birth', 'sex')
+
+        db = athrank.db.DB()
+        section = db.store.find(athrank.db.Section, name=personal_data.section)
+        if section.is_empty():
+            raise web.badrequest(
+                message='Section "{0}" not found'.format(personal_data.section)
+            )
+        section = section.one()
+
+        category = db.store.find(
+            athrank.db.Category,
+            year_of_birth=personal_data.year_of_birth,
+            sex=personal_data.sex
+        )
+        if category.is_empty():
+            raise web.badrequest(
+                message='Category for year "{0}" and sex "{1}" not found'.format(
+                    personal_data.year_of_birth,
+                    personal_data.sex
+                )
+            )
+        category = category.one()
+        
+        athlete = athrank.db.Athlete(firstname, lastname, section, year_of_birth, sex)
+        athlete.category = category.category
+        athlete.category_code = category.category_code
+
+        db.store.add(athlete)
+        db.store.commit()
+
+        web.ctx.status = '201 Created'
+        web.header('Location', _create_api_path('athlete', athlete.id_athlete))
+        web.header('Content-Type', 'application/json')
+        obj = self.get_athlete_dict(athlete)
         return json.dumps(obj)
 
 class AthleteStartNumber(AthleteBase):
@@ -87,7 +128,7 @@ class AthleteStartNumber(AthleteBase):
         if athlete.is_empty():
             raise web.notfound(message='No Athlete with this start number found')
         obj = self.get_athlete_dict(athlete.one())
-        web.webapi.header('Content-Type', 'application/json')
+        web.header('Content-Type', 'application/json')
         return json.dumps(obj)
 
 class CategoryBase(object):
@@ -98,7 +139,7 @@ class CategoryBase(object):
             obj[name] = getattr(category, name)
         obj['link'] = {
             'rel': 'self',
-            'href': '/category/{0}'.format(obj['category']),
+            'href': _create_api_path('category', obj['category']),
         }
         return obj
 
@@ -110,7 +151,7 @@ class Categories(CategoryBase):
         for category in categories:
             result.append(self.get_category_dict(category))
 
-        web.webapi.header('Content-Type', 'application/json')
+        web.header('Content-Type', 'application/json')
         return json.dumps({
             'count': len(result),
             'result': result,
@@ -128,7 +169,7 @@ class Category(CategoryBase):
             raise web.notfound(message='Category not found')
         obj = self.get_category_dict(category.one())
 
-        web.webapi.header('Content-Type', 'application/json')
+        web.header('Content-Type', 'application/json')
         return json.dumps(obj)
 
 class Sections:
@@ -140,7 +181,7 @@ class Sections:
         for section in sections:
             result.append(self.get_section_dict(section))
 
-        web.webapi.header('Content-Type', 'application/json')
+        web.header('Content-Type', 'application/json')
         return json.dumps({
             'count': len(result),
             'result': result,
