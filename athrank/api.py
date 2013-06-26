@@ -73,17 +73,10 @@ class Athletes(AthleteBase):
             'result': result,
         })
 
-class Athlete(AthleteBase):
-    def GET(self, id_athlete):
-        db = athrank.db.DB()
-        athlete = db.store.get(athrank.db.Athlete, int(id_athlete))
-        if athlete is None:
-            raise web.notfound(message='Athlete with this id not found')
-        obj = self.get_athlete_dict(athlete)
-        web.header('Content-Type', 'application/json')
-        return json.dumps(obj)
+    def POST(self, slash=False):
+        if slash:
+            raise web.seeother('/athletes')
 
-    def POST(self):
         personal_data = web.input('firstname', 'lastname', 'section', 'year_of_birth', 'sex')
 
         db = athrank.db.DB()
@@ -94,9 +87,10 @@ class Athlete(AthleteBase):
             )
         section = section.one()
 
+        year_of_birth = int(personal_data.year_of_birth)
         category = db.store.find(
             athrank.db.Category,
-            year_of_birth=personal_data.year_of_birth,
+            age_cohort=year_of_birth,
             sex=personal_data.sex
         )
         if category.is_empty():
@@ -107,10 +101,16 @@ class Athlete(AthleteBase):
                 )
             )
         category = category.one()
-        
-        athlete = athrank.db.Athlete(firstname, lastname, section, year_of_birth, sex)
-        athlete.category = category.category
-        athlete.category_code = category.category_code
+
+        athlete = athrank.db.Athlete(
+            firstname=personal_data.firstname,
+            lastname=personal_data.lastname,
+            year_of_birth=year_of_birth,
+            sex=personal_data.sex,
+            section=section.id_section,
+            category=category.category,
+            category_code=category.category_code
+        )
 
         db.store.add(athlete)
         db.store.commit()
@@ -120,6 +120,17 @@ class Athlete(AthleteBase):
         web.header('Content-Type', 'application/json')
         obj = self.get_athlete_dict(athlete)
         return json.dumps(obj)
+
+class Athlete(AthleteBase):
+    def GET(self, id_athlete):
+        db = athrank.db.DB()
+        athlete = db.store.get(athrank.db.Athlete, int(id_athlete))
+        if athlete is None:
+            raise web.notfound(message='Athlete with this id not found')
+        obj = self.get_athlete_dict(athlete)
+        web.header('Content-Type', 'application/json')
+        return json.dumps(obj)
+
 
 class AthleteStartNumber(AthleteBase):
     def GET(self, number):
