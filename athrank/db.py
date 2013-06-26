@@ -27,7 +27,7 @@ class DB(object):
     @property
     def connection(self):
         if not self._connection:
-            self._connection = db = create_database(self._buildurl())
+            self._connection = create_database(self._buildurl())
         return self._connection
 
     @property
@@ -156,12 +156,12 @@ class Athlete(object):
         year_of_birth
     )
 
-    def __init__(self, firstname, lastname, section, year_of_birth, sex):
-        self.firstname = firstname
-        self.lastname = lastname
-        self.section = section
-        self.year_of_birth = year_of_birth
-        self.sex = sex
+    def __init__(self, **kwargs):
+        for name, value in kwargs.iteritems():
+            attribute = getattr(self, name)
+            if isinstance(attribute, storm.properties.PropertyColumn):
+                raise Exception('Invalid constructor argument {0}'.format(name))
+            setattr(self, name, value)
 
 def get_relation_fields(storm_object):
     return filter(
