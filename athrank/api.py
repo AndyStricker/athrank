@@ -19,6 +19,7 @@ urls = (
     PREFIX + '/athlete/(\d+)', 'Athlete',
     PREFIX + '/athlete/number/(\d+)', 'AthleteStartNumber',
     PREFIX + '/categories', 'Categories',
+    PREFIX + '/category/year/(\d+);([fm])', 'AgeCategory',
     PREFIX + '/category/(\w+)', 'Category',
     PREFIX + '/sections', 'Sections',
 )
@@ -41,6 +42,10 @@ class AthleteBase(object):
         obj['link'] = {
             'rel': 'self',
             'href': _create_api_path('athlete', obj['id_athlete']),
+        }
+        obj['category_ref'] = {
+            'rel': 'related',
+            'href': _create_api_path('category', obj['category']),
         }
         return obj
 
@@ -92,19 +97,19 @@ class Athletes(AthleteBase):
         section = section.one()
 
         year_of_birth = int(personal_data.year_of_birth)
-        category = db.store.find(
-            athrank.db.Category,
+        agecategory = db.store.find(
+            athrank.db.AgeCategory,
             age_cohort=year_of_birth,
             sex=personal_data.sex
         )
-        if category.is_empty():
+        if agecategory.is_empty():
             raise web.badrequest(
                 message='Category for year "{0}" and sex "{1}" not found'.format(
                     personal_data.year_of_birth,
                     personal_data.sex
                 )
             )
-        category = category.one()
+        category = agecategory.one().category
 
         athlete = athrank.db.Athlete(
             firstname=personal_data.firstname,
@@ -112,8 +117,7 @@ class Athletes(AthleteBase):
             year_of_birth=year_of_birth,
             sex=personal_data.sex,
             section=section.id_section,
-            category=category.category,
-            category_code=category.category_code
+            category=category
         )
 
         db.store.add(athlete)
@@ -185,6 +189,22 @@ class Category(CategoryBase):
         if category.is_empty():
             raise web.notfound(message='Category not found')
         obj = self.get_category_dict(category.one())
+
+        web.header('Content-Type', 'application/json')
+        return json.dumps(obj)
+
+class AgeCategory(CategoryBase):
+    def GET(self, age_cohort, sex):
+        db = athrank.db.DB()
+        agecategory = db.store.find(athrank.db.AgeCategory, age_cohort=int(age_cohort), sex=sex)
+        if agecategory.is_empty():
+            raise web.notfound(
+                message='Category for age cohort {0} and sex {1} not found'.format(
+                    age_cohort, sex
+                )
+            )
+        category = agecategory.one().r_category
+        obj = self.get_category_dict(category)
 
         web.header('Content-Type', 'application/json')
         return json.dumps(obj)

@@ -125,6 +125,7 @@ class AgeCategory(object):
     sex = Enum(map=SEXES)
     category = Enum(map=CATEGORIES)
     age = Int()
+    r_category = Reference(category, Category.category)
 
 class Athlete(object):
     __storm_table__ = 'Athlete'
