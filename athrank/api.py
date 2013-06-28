@@ -25,6 +25,8 @@ import web
 import web.webapi
 import json
 import athrank.db
+import athrank.ranking
+import athrank.report
 
 from web.contrib.template import render_cheetah
 import Cheetah.Template
@@ -32,6 +34,7 @@ import Cheetah.Template
 PREFIX = '/api/v1'
 urls = (
     '/', 'Index',
+    '/ranking(/)?', 'Ranking',
     PREFIX + '/athletes(/)?', 'Athletes',
     PREFIX + '/athlete(/)?', 'Athletes',
     PREFIX + '/athlete/(\d+)', 'Athlete',
@@ -61,6 +64,19 @@ class Index:
 
         render = render_cheetah('reports/api')
         return render.index(title='Athrank', statistics=stats)
+
+class Ranking:
+    def GET(self, slash):
+        if slash:
+            raise web.seeother('/ranking')
+
+        db = athrank.db.DB()
+
+        ranking = athrank.ranking.Ranking(db, athrank.ranking.ScoreTable94())
+        ranking.rank()
+
+        report = athrank.report.RankingReport(db)
+        return report.create()
 
 class AthleteBase(object):
     ATHLETE_ATTRIBUTES = athrank.db.get_relation_fields(athrank.db.Athlete)
