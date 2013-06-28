@@ -33,7 +33,8 @@ CREATE  TABLE IF NOT EXISTS `jugi`.`Category` (
   `has_shotput` TINYINT(1) NULL ,
   `has_ball` TINYINT(1) NULL ,
   PRIMARY KEY (`category`) )
-ENGINE = InnoDB;
+ENGINE = InnoDB
+DEFAULT CHARACTER SET = utf8;
 
 
 -- -----------------------------------------------------
@@ -44,8 +45,8 @@ DROP TABLE IF EXISTS `jugi`.`AgeCategory` ;
 CREATE  TABLE IF NOT EXISTS `jugi`.`AgeCategory` (
   `age_cohort` INT NOT NULL ,
   `sex` ENUM('f','m') NOT NULL ,
-  `category` ENUM('MJ','MA','MB','MC','MD','ME','MF','KJ','KA','KB','KC','KD','KE','KF') NULL ,
-  `age` INT NULL ,
+  `category` ENUM('MJ','MA','MB','MC','MD','ME','MF','KJ','KA','KB','KC','KD','KE','KF') NOT NULL ,
+  `age` INT NOT NULL ,
   PRIMARY KEY (`age_cohort`, `sex`) ,
   INDEX `fk_AgeCategory_Category` (`category` ASC) ,
   CONSTRAINT `fk_AgeCategory_Category`
@@ -53,7 +54,8 @@ CREATE  TABLE IF NOT EXISTS `jugi`.`AgeCategory` (
     REFERENCES `jugi`.`Category` (`category` )
     ON DELETE NO ACTION
     ON UPDATE NO ACTION)
-ENGINE = InnoDB;
+ENGINE = InnoDB
+DEFAULT CHARACTER SET = utf8;
 
 
 -- -----------------------------------------------------
@@ -161,7 +163,7 @@ COMMIT;
 START TRANSACTION;
 USE `jugi`;
 INSERT INTO `jugi`.`AgeCategory` (`age_cohort`, `sex`, `category`, `age`) VALUES (1994, 'm', 'KJ', 19);
-INSERT INTO `jugi`.`AgeCategory` (`age_cohort`, `sex`, `category`, `age`) VALUES (1995, 'f', 'MJ', 19);
+INSERT INTO `jugi`.`AgeCategory` (`age_cohort`, `sex`, `category`, `age`) VALUES (1994, 'f', 'MJ', 19);
 INSERT INTO `jugi`.`AgeCategory` (`age_cohort`, `sex`, `category`, `age`) VALUES (1995, 'm', 'KJ', 18);
 INSERT INTO `jugi`.`AgeCategory` (`age_cohort`, `sex`, `category`, `age`) VALUES (1995, 'f', 'MJ', 18);
 INSERT INTO `jugi`.`AgeCategory` (`age_cohort`, `sex`, `category`, `age`) VALUES (1996, 'm', 'KA', 17);
@@ -189,6 +191,6 @@ INSERT INTO `jugi`.`AgeCategory` (`age_cohort`, `sex`, `category`, `age`) VALUES
 INSERT INTO `jugi`.`AgeCategory` (`age_cohort`, `sex`, `category`, `age`) VALUES (2007, 'm', 'KF', 6);
 INSERT INTO `jugi`.`AgeCategory` (`age_cohort`, `sex`, `category`, `age`) VALUES (2007, 'f', 'MF', 6);
 INSERT INTO `jugi`.`AgeCategory` (`age_cohort`, `sex`, `category`, `age`) VALUES (2008, 'm', 'KF', 5);
-INSERT INTO `jugi`.`AgeCategory` (`age_cohort`, `sex`, `category`, `age`) VALUES (2008, 'f', 'KF', 5);
+INSERT INTO `jugi`.`AgeCategory` (`age_cohort`, `sex`, `category`, `age`) VALUES (2008, 'f', 'MF', 5);
 
 COMMIT;
