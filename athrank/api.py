@@ -47,8 +47,20 @@ def _create_api_path(resource, rid):
 
 class Index:
     def GET(self):
+        db = athrank.db.DB()
+
+        total_athletes = db.store.find(athrank.db.Athlete).count()
+        count_per_category = db.store.execute(
+            'SELECT category, COUNT(id_athlete) FROM Athlete GROUP BY category ORDER BY category'
+        ).get_all()
+
+        stats = {
+            'total_athletes': total_athletes,
+            'count_per_category': count_per_category,
+        }
+
         render = render_cheetah('reports/api')
-        return render.index(title='Athrank', statistics={ 'total_athletes': 42 })
+        return render.index(title='Athrank', statistics=stats)
 
 class AthleteBase(object):
     ATHLETE_ATTRIBUTES = athrank.db.get_relation_fields(athrank.db.Athlete)

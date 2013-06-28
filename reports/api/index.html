@@ -8,11 +8,35 @@ body {
   font-family: 'Helvetica', 'Arial', sans-serif;
   font-size: 11pt;
 }
+table {
+    border-collapse: collapse;
+}
+td, th {
+    border: 1px solid black;
+}
 </style>
 </head>
 <body>
 <h1>$title</h1>
-<h2>Total athletes</h2>
+<h2>Ranking table</h2>
+<p>See <a href="/ranking">ranking table</a></p>
+<h2>Statistics</h2>
+<h3>Total athletes</h3>
 <p>Total: $statistics.total_athletes</p>
+<h3>Count by category</h3>
+<table>
+<thead>
+  <tr>
+    <th>Category</th>
+    <th>Count</th>
+  </tr>
+</thead>
+#for category, count in $statistics.count_per_category
+  <tr>
+    <td>$category</td>
+    <td>$count</td>
+  </tr>
+#end for
+</table>
 </body>
 </html>
