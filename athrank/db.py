@@ -100,6 +100,7 @@ AWARDS = {
     u'GOLD': u'GOLD',
     u'SILVER': u'SILVER',
     u'BRONZE': u'BRONZE',
+    u'AWARD': u'AWARD',
 }
 
 SEXES = {
@@ -115,12 +116,16 @@ class Section(object):
 
 class Category(object):
     __storm_table__ = 'Category'
-    __storm_primary__ = ('category', 'age_cohort')
-    category = Enum(map=CATEGORIES)
-    age_cohort = Int()
-    age = Int()
-    category_code = Enum(map=CATEGORY_CODES)
+    category = Enum(map=CATEGORIES, primary=True)
     sex = Enum(map=SEXES)
+
+class AgeCategory(object):
+    __storm_table__ = 'AgeCategory'
+    __storm_primary__ = ('age_cohort', 'sex')
+    age_cohort = Enum(map=CATEGORIES)
+    sex = Enum(map=SEXES)
+    category = Enum(map=CATEGORIES)
+    age = Int()
 
 class Athlete(object):
     __storm_table__ = 'Athlete'
@@ -132,7 +137,6 @@ class Athlete(object):
     year_of_birth = Int()
     sex = Enum(map=SEXES)
     category = Enum(map=CATEGORIES)
-    category_code = Enum(map=CATEGORY_CODES)
     sprint_result = Decimal()
     longjump_result = Decimal()
     highjump_result = Decimal()
@@ -149,11 +153,12 @@ class Athlete(object):
     qualify = Bool()
     verified = Bool()
     r_section = Reference(section, Section.id_section)
-    r_category = ReferenceSet(
-        category,
-        Category.category,
-        Category.age_cohort,
-        year_of_birth
+    r_category = Reference(category, Category.category)
+    r_age_category = ReferenceSet(
+        year_of_birth,
+        AgeCategory.age_cohort,
+        AgeCategory.sex,
+        sex
     )
 
     def __init__(self, **kwargs):
