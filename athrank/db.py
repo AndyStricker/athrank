@@ -117,12 +117,11 @@ class Section(object):
 class Category(object):
     __storm_table__ = 'Category'
     category = Enum(map=CATEGORIES, primary=True)
-    sex = Enum(map=SEXES)
 
 class AgeCategory(object):
     __storm_table__ = 'AgeCategory'
     __storm_primary__ = ('age_cohort', 'sex')
-    age_cohort = Enum(map=CATEGORIES)
+    age_cohort = Int()
     sex = Enum(map=SEXES)
     category = Enum(map=CATEGORIES)
     age = Int()
