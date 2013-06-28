@@ -44,6 +44,7 @@ class Ranking(object):
         self.calculate_points()
         self.assign_rank()
         self.assign_awards()
+        self.assign_extra_awards()
         self.assign_final_qualification()
 
     def calculate_points(self):
@@ -121,6 +122,17 @@ class Ranking(object):
                 candidates.pop(0)
         self.db.store.commit()
 
+    def assign_extra_awards(self):
+        for category in self._get_category_list():
+            athletes = self.db.store.find(athrank.db.Athlete, category=category)
+            athletes.order_by(athrank.db.Athlete.rank, athrank.db.Athlete.number)
+            for athlete in athletes:
+                if self.score_table.has_extra_award(category, athletes.count(), athlete.rank):
+                    athlete.award = u'AWARD'
+                else:
+                    break
+        self.db.store.commit()
+
     def assign_final_qualification(self):
         self.db.store.execute('UPDATE Athlete SET qualify = FALSE')
         for category in self._get_category_list():
@@ -130,10 +142,8 @@ class Ranking(object):
             qualified_number = self.score_table.qualify_count_by_percent(category, athletes.count())
             for athlete in athletes:
                 if qualified_number > 0:
-                    print "Category %s: %s %s qualified by number" % (category, athlete.firstname, athlete.lastname)
                     athlete.qualify = True
                 if self.score_table.qualified_by_points(category, athlete.total_points):
-                    print "Category %s: %s %s qualified by points" % (category, athlete.firstname, athlete.lastname)
                     athlete.qualify = True
                 qualified_number -= 1
         self.db.store.commit()
@@ -300,3 +310,8 @@ class ScoreTable94(object):
             return False
         return points >= limit
 
+    def has_extra_award(self, category, total_athletes, rank):
+        if rank <= 3:
+            return False # the first three ranks already got awards
+        n_awards = math.ceil(total_athletes * 0.30) # 30% rounded up
+        return (rank <= n_awards)

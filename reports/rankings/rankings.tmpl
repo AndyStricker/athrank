@@ -61,7 +61,11 @@ thead .name, thead .section { text-align: left }
     <td class="discipline points">#if $athlete.shotput_result then $athlete.shotput_points else ''#</td>
     <td class="discipline points">#if $athlete.ball_result then $athlete.ball_points else ''#</td>
     <td class="total points">$athlete.total_points</td>
+    #if $athlete.award == 'AWARD'
+    <td class="award">*</td>
+    #else
     <td class="award">#if $athlete.award then $athlete.award[:1] else ''#</td>
+    #end if
     <td></td>
   </tr>
   #end for
