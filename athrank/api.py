@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 """ RESTful Athrank webservice API """
 
 # Copyright © 2013 Andreas Stricker <andy@knitter.ch>

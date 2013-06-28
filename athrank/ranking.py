@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 # Copyright © 2013 Andreas Stricker <andy@knitter.ch>
 # 
 # This file is part of Athrank.
