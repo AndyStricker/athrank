@@ -77,7 +77,11 @@ class Athletes(AthleteBase):
         if slash:
             raise web.seeother('/athletes')
 
-        personal_data = web.input('firstname', 'lastname', 'section', 'year_of_birth', 'sex')
+    def POST(self):
+        personal_data = web.input(
+            'firstname', 'lastname', 'section', 'year_of_birth', 'sex',
+            _unicode=True
+        )
 
         db = athrank.db.DB()
         section = db.store.find(athrank.db.Section, name=personal_data.section)
@@ -131,6 +135,8 @@ class Athlete(AthleteBase):
         web.header('Content-Type', 'application/json')
         return json.dumps(obj)
 
+    def PUT(self, id_athlete):
+        attributes = web.input(_unicode=True)
 
 class AthleteStartNumber(AthleteBase):
     def GET(self, number):
