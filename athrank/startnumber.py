@@ -25,7 +25,7 @@ def assign_start_number_from_id(db):
 def assign_start_number_sequential(db, start=0, skip_assigned=True):
     if skip_assigned:
         result = db.store.execute('SELECT MAX(number) FROM Athlete')
-        start = max(result.get_one()[0], start)
+        start = max(result.get_one()[0] + 1, start)
     else:
         db.store.execute('UPDATE Athlete SET number = NULL')
     n = start
