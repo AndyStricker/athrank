@@ -31,7 +31,7 @@ import athrank.report
 from web.contrib.template import render_cheetah
 import Cheetah.Template
 
-PREFIX = '/api/v1'
+PREFIX = '/v1'
 urls = (
     '/', 'Index',
     '/ranking(/)?', 'Ranking',
@@ -275,6 +275,9 @@ class Sections:
             obj[name] = getattr(section, name)
         return obj
 
+def get_application():
+    return web.application(urls, globals())
+
 if __name__ == '__main__':
-    app = web.application(urls, globals())
+    app = get_application()
     app.run()
