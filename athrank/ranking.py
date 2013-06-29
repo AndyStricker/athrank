@@ -16,6 +16,7 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
+import math
 import storm.expr
 import athrank.db
 
@@ -129,8 +130,6 @@ class Ranking(object):
             for athlete in athletes:
                 if self.score_table.has_extra_award(category, athletes.count(), athlete.rank):
                     athlete.award = u'AWARD'
-                else:
-                    break
         self.db.store.commit()
 
     def assign_final_qualification(self):
