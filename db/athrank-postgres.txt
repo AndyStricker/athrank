@@ -1,0 +1,25 @@
+Connect to athrank with the Libreoffice Postgresql DB connector
+===============================================================
+
+Requirements
+------------
+
+To connect with Libreoffice Base to the athrank database install the
+Libreoffice database connector. The Debian package is named
+"libreoffice-sdbc-postgresql".
+
+
+Connection URL
+--------------
+
+Despite its name it's not an URL but a string with key-value pairs.
+For example to connect to the postgres itself use this string:
+
+  dbname=postgres hostaddr=127.0.0.1 port=5433 user=db_user password=libreoffice
+
+To connect to the athrank database use this string:
+
+  dbname=athrank hostaddr=127.0.0.1 port=5432
+
+Leave the user and password setting the dialog or specifiy it here too.
+
