@@ -226,6 +226,15 @@ class CSVJuweImporter(CSVImporter):
         u"KugelResultat": 'shotput_result',
         u"BallResultat": 'ball_result',
     }
+    CATEGORIES = {
+        'MJ': 'U20', 'KJ': 'U20',
+        'MA': 'U18', 'KA': 'U18',
+        'MB': 'U16', 'KB': 'U16',
+        'MC': 'U14', 'KC': 'U14',
+        'MD': 'U12', 'KD': 'U12',
+        'ME': 'U10', 'KE': 'U10',
+        'MF': 'U8',  'KF': 'U8',
+    }
     def __init__(self, db, add_to_year=0):
         super(CSVJuweImporter, self).__init__(db)
         self._add_to_year = add_to_year
@@ -251,12 +260,11 @@ class CSVJuweImporter(CSVImporter):
         (lastname, firstname) = data['name'].split(' ', 1)
         athlete.firstname = firstname
         athlete.lastname = lastname
-        athlete.category = data['category']
-        athlete.section = self._section_to_id(data['section'])
-        athlete.sex = self._convert_sex(data['sex'])
         to_year = lambda x: (2000 + x) if x < 50 else (1900 + x)
-        athlete.year_of_birth = to_year(int(data['year_of_birth'])) + self._add_to_year
-        athlete.category_code = data['category'][1]
+        athlete.age_cohort = to_year(int(data['year_of_birth'])) + self._add_to_year
+        athlete.sex = self._convert_sex(data['sex'])
+        athlete.category = self._convert_category(athlete.age_cohort, athlete.sex)
+        athlete.id_section = self._section_to_id(data['section'])
 
         to_result = lambda r: decimal.Decimal(r) if len(r) > 0 else None
         athlete.sprint_result = to_result(data['sprint_result'])
@@ -274,4 +282,11 @@ class CSVJuweImporter(CSVImporter):
         return d
 
     def _convert_sex(self, sex):
-        return { 'w': 'f', 'm': 'm'}[sex.lower()]
+        return { 'w': 'female', 'm': 'male'}[sex.lower()]
+
+    def _convert_category(self, age_cohort, sex):
+        AgeCategory = athrank.db.AgeCategory
+        age_category = self.db.store.find(AgeCategory,
+            (AgeCategory.age_cohort == age_cohort) & (AgeCategory.sex == sex)).one()
+        return age_category.category
+
