@@ -99,97 +99,67 @@ class DB(object):
 
 class DBError(Exception): pass
 
-CATEGORIES = {
-    u'MJ': u'MJ',
-    u'MA': u'MA',
-    u'MB': u'MB',
-    u'MC': u'MC',
-    u'MD': u'MD',
-    u'ME': u'ME',
-    u'MF': u'MF',
-    u'KJ': u'KJ',
-    u'KA': u'KA',
-    u'KB': u'KB',
-    u'KC': u'KC',
-    u'KD': u'KD',
-    u'KE': u'KE',
-    u'KF': u'KF',
-}
-
-CATEGORY_CODES = {
-    u'J': u'J',
-    u'A': u'A',
-    u'B': u'B',
-    u'C': u'C',
-    u'D': u'D',
-    u'E': u'E',
-    u'F': u'F',
-}
-
-AWARDS = {
-    u'GOLD': u'GOLD',
-    u'SILVER': u'SILVER',
-    u'BRONZE': u'BRONZE',
-    u'AWARD': u'AWARD',
-}
-
-SEXES = {
-    u'f': u'f', # feminim
-    u'm': u'm', # masculin
-}
+CATEGORIES = {'U8', 'U10', 'U12', 'U14', 'U16', 'U18', 'U20'}
+AWARDS = {'GOLD', 'SILVER', 'BRONZE', 'AWARD'}
+SEXES = {'female', 'male'}
 
 class Section(object):
-    __storm_table__ = 'Section'
+    __storm_table__ = 'section'
     id_section = Int(primary=True)
     name = Unicode()
     canton = Unicode()
 
 class Category(object):
-    __storm_table__ = 'Category'
-    category = Enum(map=CATEGORIES, primary=True)
+    __storm_table__ = 'category'
+    __storm_primary__ = ('category', 'sex')
+    category = Enum(map=dict((x, x) for x in CATEGORIES))
+    sex = Enum(map=dict((x, x) for x in SEXES))
+    sprint_distance = Int()
+    has_longjump = Bool()
+    has_highjump = Bool()
+    has_shotput = Bool()
+    has_ball = Bool()
+    has_endurance_run = Bool()
 
 class AgeCategory(object):
-    __storm_table__ = 'AgeCategory'
+    __storm_table__ = 'agecategory'
     __storm_primary__ = ('age_cohort', 'sex')
     age_cohort = Int()
-    sex = Enum(map=SEXES)
-    category = Enum(map=CATEGORIES)
+    sex = Enum(map=dict((x, x) for x in SEXES))
+    category = Enum(map=dict((x, x) for x in CATEGORIES))
     age = Int()
-    r_category = Reference(category, Category.category)
+    r_category = ReferenceSet((category, sex), (Category.category, Category.sex))
 
 class Athlete(object):
-    __storm_table__ = 'Athlete'
+    __storm_table__ = 'athlete'
     id_athlete = Int(primary=True)
     number = Int()
     firstname = Unicode()
     lastname = Unicode()
-    section = Int()
-    year_of_birth = Int()
-    sex = Enum(map=SEXES)
-    category = Enum(map=CATEGORIES)
+    id_section = Int()
+    age_cohort = Int()
+    sex = Enum(map=dict((x, x) for x in SEXES))
+    category = Enum(map=dict((x, x) for x in CATEGORIES))
     sprint_result = Decimal()
     longjump_result = Decimal()
     highjump_result = Decimal()
     shotput_result = Decimal()
     ball_result = Decimal()
+    endurance_run_result = Decimal()
     sprint_points = Int()
     longjump_points = Int()
     highjump_points = Int()
     shotput_points = Int()
     ball_points = Int()
+    endurance_run_points = Int()
     total_points = Int()
     rank = Int()
     award = Unicode()
-    qualify = Bool()
+    qualified = Bool()
     verified = Bool()
-    r_section = Reference(section, Section.id_section)
-    r_category = Reference(category, Category.category)
-    r_age_category = ReferenceSet(
-        year_of_birth,
-        AgeCategory.age_cohort,
-        AgeCategory.sex,
-        sex
-    )
+    r_section = Reference(id_section, Section.id_section)
+    r_category = Reference((category, sex), (Category.category, Category.sex))
+    r_age_category = Reference((age_cohort, sex), (AgeCategory.age_cohort, AgeCategory.sex))
 
     def __init__(self, **kwargs):
         for name, value in kwargs.iteritems():
