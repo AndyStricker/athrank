@@ -19,7 +19,9 @@
 from storm.locals import *
 import storm.tracer
 import storm.properties
+import json
 import sys
+import errno
 
 class DB(object):
     def __init__(self):
@@ -33,6 +35,7 @@ class DB(object):
         }
         self._connection = None
         self._store = None
+        self._init_config()
 
     @property
     def config(self):
@@ -53,6 +56,15 @@ class DB(object):
         if not self._store:
             self._store = Store(self.connection)
         return self._store
+
+    def _init_config(self):
+        try:
+            with file('config.json', 'r') as f:
+                fcfg = json.load(f)
+                self._config.update(fcfg)
+        except IOError as e:
+            if e.errno != errno.ENOENT:
+                raise
 
     def enable_debug(self):
         storm.tracer.debug(True, stream=sys.stderr)
