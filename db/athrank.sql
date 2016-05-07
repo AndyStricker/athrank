@@ -10,49 +10,6 @@ SET client_min_messages = warning;
 
 SET search_path = public, pg_catalog;
 
---
--- Name: award_enum; Type: TYPE; Schema: public; Owner: jugiuser
---
-
-CREATE TYPE award_enum AS ENUM (
-    'GOLD',
-    'SILVER',
-    'BRONZE',
-    'AWARD'
-);
-
-
-ALTER TYPE public.award_enum OWNER TO jugiuser;
-
---
--- Name: category_enum; Type: TYPE; Schema: public; Owner: jugiuser
---
-
-CREATE TYPE category_enum AS ENUM (
-    'U8',
-    'U10',
-    'U12',
-    'U14',
-    'U16',
-    'U18',
-    'U20'
-);
-
-
-ALTER TYPE public.category_enum OWNER TO jugiuser;
-
---
--- Name: sex_enum; Type: TYPE; Schema: public; Owner: jugiuser
---
-
-CREATE TYPE sex_enum AS ENUM (
-    'female',
-    'male'
-);
-
-
-ALTER TYPE public.sex_enum OWNER TO jugiuser;
-
 SET default_tablespace = '';
 
 SET default_with_oids = false;
@@ -63,8 +20,8 @@ SET default_with_oids = false;
 
 CREATE TABLE agecategory (
     age_cohort integer NOT NULL,
-    sex sex_enum NOT NULL,
-    category category_enum NOT NULL,
+    sex character varying(6) NOT NULL,
+    category character varying(3) NOT NULL,
     age integer NOT NULL
 );
 
@@ -84,7 +41,7 @@ CREATE TABLE athlete (
     age_cohort integer NOT NULL,
     sprint_result numeric(5,2),
     longjump_result numeric(5,2),
-    sex sex_enum NOT NULL,
+    sex character varying(6) NOT NULL,
     highjump_result numeric(5,2),
     shotput_result numeric(5,2),
     ball_result numeric(5,2),
@@ -96,7 +53,7 @@ CREATE TABLE athlete (
     ball_points integer,
     endurance_run_points integer,
     total_points integer DEFAULT 0 NOT NULL,
-    award award_enum,
+    award character varying(6),
     qualified boolean DEFAULT false NOT NULL,
     rank integer,
     verified boolean DEFAULT false NOT NULL
@@ -127,12 +84,34 @@ ALTER SEQUENCE athlete_id_athlete_seq OWNED BY athlete.id_athlete;
 
 
 --
+-- Name: awards; Type: TABLE; Schema: public; Owner: jugiuser; Tablespace: 
+--
+
+CREATE TABLE awards (
+    award character varying(6) NOT NULL
+);
+
+
+ALTER TABLE public.awards OWNER TO jugiuser;
+
+--
+-- Name: categories; Type: TABLE; Schema: public; Owner: jugiuser; Tablespace: 
+--
+
+CREATE TABLE categories (
+    category character varying(3) NOT NULL
+);
+
+
+ALTER TABLE public.categories OWNER TO jugiuser;
+
+--
 -- Name: category; Type: TABLE; Schema: public; Owner: jugiuser; Tablespace: 
 --
 
 CREATE TABLE category (
-    category category_enum NOT NULL,
-    sex sex_enum NOT NULL,
+    category character varying(3) NOT NULL,
+    sex character varying(6) NOT NULL,
     sprint_distance integer NOT NULL,
     has_longjump boolean NOT NULL,
     has_highjump boolean NOT NULL,
@@ -179,6 +158,17 @@ ALTER SEQUENCE section_id_section_seq OWNED BY section.id_section;
 
 
 --
+-- Name: sexes; Type: TABLE; Schema: public; Owner: jugiuser; Tablespace: 
+--
+
+CREATE TABLE sexes (
+    sex character varying(6) NOT NULL
+);
+
+
+ALTER TABLE public.sexes OWNER TO jugiuser;
+
+--
 -- Name: id_athlete; Type: DEFAULT; Schema: public; Owner: jugiuser
 --
 
@@ -217,6 +207,22 @@ ALTER TABLE ONLY athlete
 
 
 --
+-- Name: awards_pkey; Type: CONSTRAINT; Schema: public; Owner: jugiuser; Tablespace: 
+--
+
+ALTER TABLE ONLY awards
+    ADD CONSTRAINT awards_pkey PRIMARY KEY (award);
+
+
+--
+-- Name: categories_pkey; Type: CONSTRAINT; Schema: public; Owner: jugiuser; Tablespace: 
+--
+
+ALTER TABLE ONLY categories
+    ADD CONSTRAINT categories_pkey PRIMARY KEY (category);
+
+
+--
 -- Name: category_pkey; Type: CONSTRAINT; Schema: public; Owner: jugiuser; Tablespace: 
 --
 
@@ -233,11 +239,43 @@ ALTER TABLE ONLY section
 
 
 --
+-- Name: sexes_pkey; Type: CONSTRAINT; Schema: public; Owner: jugiuser; Tablespace: 
+--
+
+ALTER TABLE ONLY sexes
+    ADD CONSTRAINT sexes_pkey PRIMARY KEY (sex);
+
+
+--
+-- Name: agecategory_category_fkey; Type: FK CONSTRAINT; Schema: public; Owner: jugiuser
+--
+
+ALTER TABLE ONLY agecategory
+    ADD CONSTRAINT agecategory_category_fkey FOREIGN KEY (category) REFERENCES categories(category);
+
+
+--
+-- Name: agecategory_sex_category_fkey; Type: FK CONSTRAINT; Schema: public; Owner: jugiuser
+--
+
+ALTER TABLE ONLY agecategory
+    ADD CONSTRAINT agecategory_sex_category_fkey FOREIGN KEY (sex, category) REFERENCES category(sex, category);
+
+
+--
 -- Name: agecategory_sex_fkey; Type: FK CONSTRAINT; Schema: public; Owner: jugiuser
 --
 
 ALTER TABLE ONLY agecategory
-    ADD CONSTRAINT agecategory_sex_fkey FOREIGN KEY (sex, category) REFERENCES category(sex, category);
+    ADD CONSTRAINT agecategory_sex_fkey FOREIGN KEY (sex) REFERENCES sexes(sex);
+
+
+--
+-- Name: athlete_award_fkey; Type: FK CONSTRAINT; Schema: public; Owner: jugiuser
+--
+
+ALTER TABLE ONLY athlete
+    ADD CONSTRAINT athlete_award_fkey FOREIGN KEY (award) REFERENCES awards(award);
 
 
 --
@@ -249,11 +287,35 @@ ALTER TABLE ONLY athlete
 
 
 --
+-- Name: athlete_sex_age_cohort_fkey; Type: FK CONSTRAINT; Schema: public; Owner: jugiuser
+--
+
+ALTER TABLE ONLY athlete
+    ADD CONSTRAINT athlete_sex_age_cohort_fkey FOREIGN KEY (sex, age_cohort) REFERENCES agecategory(sex, age_cohort);
+
+
+--
 -- Name: athlete_sex_fkey; Type: FK CONSTRAINT; Schema: public; Owner: jugiuser
 --
 
 ALTER TABLE ONLY athlete
-    ADD CONSTRAINT athlete_sex_fkey FOREIGN KEY (sex, age_cohort) REFERENCES agecategory(sex, age_cohort);
+    ADD CONSTRAINT athlete_sex_fkey FOREIGN KEY (sex) REFERENCES sexes(sex);
+
+
+--
+-- Name: category_category_fkey; Type: FK CONSTRAINT; Schema: public; Owner: jugiuser
+--
+
+ALTER TABLE ONLY category
+    ADD CONSTRAINT category_category_fkey FOREIGN KEY (category) REFERENCES categories(category);
+
+
+--
+-- Name: category_sex_fkey; Type: FK CONSTRAINT; Schema: public; Owner: jugiuser
+--
+
+ALTER TABLE ONLY category
+    ADD CONSTRAINT category_sex_fkey FOREIGN KEY (sex) REFERENCES sexes(sex);
 
 
 --
