@@ -122,11 +122,9 @@ class CSVImporter(object):
                 raise Exception('Expected header field %d is "%s" but got "%s"' % (n, expected, value))
     def _category_from_age_and_sex(self, age_cohort, sex):
         AgeCategory = athrank.db.AgeCategory
-        print 'XXX {!r} {!r}'.format(age_cohort, sex)
         age_category = self.db.store.find(AgeCategory,
             (AgeCategory.age_cohort == age_cohort) & (AgeCategory.sex == sex)).one()
         if age_category is None:
-            print "XXX category not found {} {}".format(age_cohort, sex)
             return None
         return age_category.category
 
