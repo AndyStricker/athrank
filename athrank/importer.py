@@ -88,6 +88,17 @@ class CSVImporter(object):
             self._fields = self._create_fields_lookup_table()
         return self._fields
 
+    def read(self, filename):
+        reader = UnicodeReader(open(filename, 'rb'), RFC4180)
+        header = reader.next()
+        self._check_header(header)
+        n = 0
+        for record in reader:
+            self._insert(record)
+            n += 1
+        self.db.store.commit()
+        return n
+
     def _create_section_lookup_table(self):
         table = {}
         for section in self.db.store.find(athrank.db.Section):
@@ -149,17 +160,6 @@ class CSVAthleteImporter(CSVImporter):
         super(CSVAthleteImporter, self).__init__(db)
         self._add_to_year = add_to_year
 
-    def read(self, filename):
-        reader = UnicodeReader(open(filename, 'rb'), RFC4180)
-        header = reader.next()
-        self._check_header(header)
-        n = 0
-        for record in reader:
-            self._insert(record)
-            n += 1
-        self.db.store.commit()
-        return n
-
     def _insert(self, record):
         data = self.record_to_dict(record)
         athlete = self.db.create('athlete')
@@ -177,7 +177,7 @@ class CSVAthleteImporter(CSVImporter):
         return record[self.fields[name]]
 
     def _convert_sex(self, v):
-        return {'k':'male', 'm': 'female'}[v.lower()].decode('utf-8')
+        return {'k': u'male', 'm': u'female'}[v.lower()]
 
     def record_to_dict(self, record):
         d = {}
@@ -252,17 +252,6 @@ class CSVJuweImporter(CSVImporter):
         super(CSVJuweImporter, self).__init__(db)
         self._add_to_year = add_to_year
 
-    def read(self, filename):
-        reader = UnicodeReader(open(filename, 'rb'), RFC4180)
-        header = reader.next()
-        self._check_header(header)
-        n = 0
-        for record in reader:
-            self._insert(record)
-            n += 1
-        self.db.store.commit()
-        return n
-
     def _insert(self, record):
         data = self.record_to_dict(record)
         if len(data['name']) == 0 and len(data['section']) == 0:
@@ -295,5 +284,5 @@ class CSVJuweImporter(CSVImporter):
         return d
 
     def _convert_sex(self, sex):
-        return { 'w': 'female', 'm': 'male'}[sex.lower()]
+        return { 'w': u'female', 'm': u'male'}[sex.lower()]
 
