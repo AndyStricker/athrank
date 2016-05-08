@@ -73,6 +73,7 @@ class Ranking(object):
                 points = self.score_table.calculate_points(
                     discipline,
                     athlete.category,
+                    athlete.sex,
                     float(value)
                 )
             total_points += points
@@ -81,8 +82,8 @@ class Ranking(object):
 
     def assign_rank(self):
         self.db.store.execute('UPDATE Athlete SET rank = NULL')
-        for category in self._get_category_list():
-            athletes = self.db.store.find(athrank.db.Athlete, category=category)
+        for sex, category in self._get_category_list():
+            athletes = self.db.store.find(athrank.db.Athlete, sex=sex, category=category)
             athletes.order_by(storm.expr.Desc(athrank.db.Athlete.total_points))
             rank = 1
             last_rank = rank
@@ -99,8 +100,8 @@ class Ranking(object):
 
     def assign_awards(self):
         self.db.store.execute('UPDATE Athlete SET award = NULL')
-        for category in self._get_category_list():
-            athletes = self.db.store.find(athrank.db.Athlete, category=category)
+        for sex, category in self._get_category_list():
+            athletes = self.db.store.find(athrank.db.Athlete, sex=sex, category=category)
             athletes.order_by(athrank.db.Athlete.rank, athrank.db.Athlete.number)
             if athletes.count() == 0:
                 continue
@@ -124,26 +125,26 @@ class Ranking(object):
         self.db.store.commit()
 
     def assign_extra_awards(self):
-        for category in self._get_category_list():
-            athletes = self.db.store.find(athrank.db.Athlete, category=category)
+        for sex, category in self._get_category_list():
+            athletes = self.db.store.find(athrank.db.Athlete, sex=sex, category=category)
             athletes.order_by(athrank.db.Athlete.rank, athrank.db.Athlete.number)
             for athlete in athletes:
-                if self.score_table.has_extra_award(category, athletes.count(), athlete.rank):
+                if self.score_table.has_extra_award(category, sex, athletes.count(), athlete.rank):
                     athlete.award = u'AWARD'
         self.db.store.commit()
 
     def assign_final_qualification(self):
-        self.db.store.execute('UPDATE Athlete SET qualify = FALSE')
-        for category in self._get_category_list():
-            athletes = self.db.store.find(athrank.db.Athlete, category=category)
+        self.db.store.execute('UPDATE Athlete SET qualified = FALSE')
+        for sex, category in self._get_category_list():
+            athletes = self.db.store.find(athrank.db.Athlete, sex=sex, category=category)
             athletes.order_by(storm.expr.Desc(athrank.db.Athlete.total_points))
             # percentual or minimum number of athletes to be qualified
-            qualified_number = self.score_table.qualify_count_by_percent(category, athletes.count())
+            qualified_number = self.score_table.qualify_count_by_percent(category, sex, athletes.count())
             for athlete in athletes:
                 if qualified_number > 0:
-                    athlete.qualify = True
-                if self.score_table.qualified_by_points(category, athlete.total_points):
-                    athlete.qualify = True
+                    athlete.qualified = True
+                if self.score_table.qualified_by_points(category, sex, athlete.total_points):
+                    athlete.qualified = True
                 qualified_number -= 1
         self.db.store.commit()
 
@@ -151,165 +152,194 @@ class Ranking(object):
         db_categories = self.db.store.find(athrank.db.Category)
         category_set = set()
         for category in db_categories:
-            category_set.add(category.category)
+            category_set.add((category.sex, category.category))
         categories = list(category_set)
         categories.sort()
         return categories
 
 class ScoreTable(object):
-    def calculate_points(self, discipline, category, value):
+    def calculate_points(self, discipline, category, sex, value):
         raise Exception("Must be implemented by subclass")
 
 class ScoreTable94(object):
-    def calculate_points(self, discipline, category, value):
+    def calculate_points(self, discipline, category, sex, value):
         method = getattr(self, discipline)
         if method is None:
             raise Exception("No method for discipline %s found" % discipline)
-        return method(category, value)
+        return method(category, sex, value)
 
-    def sprint(self, category, value):
-        if category in ('MJ', 'MA'):   # 100m
-            if value >= 21.43: return 1
-            return int(7.89305 * (21.8 - value) ** 2.1)
-        elif category in ('MB'):       # 80m
-            if value >= 17.73: return 1
-            return int(11.754907 * (18.03 - value) ** 2.1)
-        elif category in ('MC', 'MD'): # 60m
-            if value >= 13.93: return 1
-            return int(19.742424 * (14.17 - value) ** 2.1)
-        elif category in ('ME', 'MF'): # 50m
-            if value >= 12.15: return 1
-            return int(26.011098 * (12.36 - value) ** 2.1)
-        elif category in ('KJ', 'KA'): # 100m
-            if value >= 21.11: return 1
-            return int(7.080303 * (21.5 - value) ** 2.1)
-        elif category in ('KB'):       # 80m
-            if value >= 17.46: return 1
-            return int(10.54596 * (17.78 - value) ** 2.1)
-        elif category in ('KC', 'KD'): # 60m
-            if value >= 13.72: return 1
-            return int(17.686955 * (13.97 - value) ** 2.1)
-        elif category in ('KE', 'KF'): # 50m
-            if value >= 11.97: return 1
-            return int(23.327251 * (12.19 - value) ** 2.1)
+    def sprint(self, category, sex, value):
+        if sex == 'female':
+            if category in ('U20', 'U18'):   # 100m
+                if value >= 21.43: return 1
+                return int(7.89305 * (21.8 - value) ** 2.1)
+            elif category in ('U16'):       # 80m
+                if value >= 17.73: return 1
+                return int(11.754907 * (18.03 - value) ** 2.1)
+            elif category in ('U14', 'U12'): # 60m
+                if value >= 13.93: return 1
+                return int(19.742424 * (14.17 - value) ** 2.1)
+            elif category in ('U10', 'U8'): # 50m
+                if value >= 12.15: return 1
+                return int(26.011098 * (12.36 - value) ** 2.1)
+            else:
+                raise Exception("Invalid female category {}".format(category))
+        elif sex == 'male':
+            if category in ('U20', 'U18'): # 100m
+                if value >= 21.11: return 1
+                return int(7.080303 * (21.5 - value) ** 2.1)
+            elif category in ('U16'):       # 80m
+                if value >= 17.46: return 1
+                return int(10.54596 * (17.78 - value) ** 2.1)
+            elif category in ('U14', 'U12'): # 60m
+                if value >= 13.72: return 1
+                return int(17.686955 * (13.97 - value) ** 2.1)
+            elif category in ('U10', 'U8'): # 50m
+                if value >= 11.97: return 1
+                return int(23.327251 * (12.19 - value) ** 2.1)
+            else:
+                raise Exception("Invalid male category {}".format(category))
         else:
-            raise Exception("Invalid category %s" % category)
+            raise Exception("Invalid sex {}".format(sex))
 
-    def endurancerun(self, category, value):
-        if category in ('MJ', 'MA', 'MB', 'MC'):
-            if value > 332.89: return 1
-            return int(0.006914 * (341.58 - value) ** 2.3)
-        elif category in ('KJ', 'KA', 'KB', 'KC'):
-            if value >= 317.07: return 1
-            return int(0.0068251 * (325.81 - value) ** 2.3)
-        elif category in ('MD', 'ME', 'MF', 'KD', 'KE', 'KF'): # no endurance run
+    def endurancerun(self, category, sex, value):
+        if category in ('U12', 'U10', 'U8'):  # no endurance run
             return 0
-        return 0
+        elif category in ('U20', 'U18', 'U16', 'U14'):
+            if sex == 'female':
+                if value > 332.89: return 1
+                return int(0.006914 * (341.58 - value) ** 2.3)
+            elif sex == 'male':
+                if value >= 317.07: return 1
+                return int(0.0068251 * (325.81 - value) ** 2.3)
+            else:
+                raise Exception("Invalid sex: {}".format(sex))
+        else:
+            raise Exception("Invalid category: {}".format(category))
 
-    def longjump(self, category, value):
-        if category in ('MJ', 'MA', 'MB', 'MC', 'MD', 'ME', 'MF'):
+    def longjump(self, category, sex, value):
+        if not category in ('U20', 'U18', 'U16', 'U14', 'U12', 'U10', 'U8'):
+            raise Exception("Invalid category {}".format(category))
+        if sex == 'female':
             if value <= 1.8: return 1
             return int(220.628792 * (value - 1.8) ** 1.0)
-        elif category in ('KJ', 'KA', 'KB', 'KC', 'KD', 'KE', 'KF'):
+        elif sex == 'male':
             if value <= 1.9: return 1
             return int(180.85908 * (value - 1.9) ** 1.0)
         else:
-            raise Exception("Invalid category %s" % category)
+            raise Exception("Invalid sex {}".format(sex))
 
-    def highjump(self, category, value):
-        if category in ('MJ', 'MA', 'MB', 'MC'):
-            if value <= 0.62: return 1
-            return int(855.310049 * (value - 0.62) ** 1.0)
-        elif category in ('KJ', 'KA', 'KB', 'KC'):
-            if value <= 0.65: return 1
-            return int(690.05175 * (value - 0.65) ** 1.0)
-        elif category in ('MD', 'ME', 'MF', 'KD', 'KE', 'KF'): # no highjump
+    def highjump(self, category, sex, value):
+        if category in ('U12', 'U10', 'U8'):  # no highjump
             return 0
+        elif category in ('U20', 'U18', 'U16', 'U14'):
+            if sex == 'female':
+                if value <= 0.62: return 1
+                return int(855.310049 * (value - 0.62) ** 1.0)
+            elif sex == 'male':
+                if value <= 0.65: return 1
+                return int(690.05175 * (value - 0.65) ** 1.0)
+            else:
+                raise Exception("Invalid sex {}".format(sex))
         else:
-            raise Exception("Invalid category %s" % category)
+            raise Exception("Invalid category {}".format(category))
 
-    def shotput(self, category, value):
-        if category in ('MJ', 'MA', 'MB'):
-            if value <= 1.3: return 1
-            return int(83.435373 * (value - 1.3) ** 0.9)
-        elif category in ('KJ', 'KA', 'KB', 'KC'):
-            if value <= 1.78: return 1
-            return int(82.491673 * (value - 1.78) ** 0.9)
-        elif category in ('MC', 'MD', 'ME', 'MF', 'KD', 'KE', 'KF'):
+    def shotput(self, category, sex, value):
+        if category in ('U12', 'U10', 'U8'):  # no shotput
             return 0
+        elif category in ('U20', 'U18', 'U16', 'U14'):
+            if sex == 'female':
+                if value <= 1.3: return 1
+                return int(83.435373 * (value - 1.3) ** 0.9)
+            elif sex == 'male':
+                if value <= 1.78: return 1
+                return int(82.491673 * (value - 1.78) ** 0.9)
+            else:
+                raise Exception("Invalid sex {}".format(sex))
         else:
-            raise Exception("Invalid category %s" % category)
+            raise Exception("Invalid category {}".format(category))
 
-    def ball(self, category, value):
-        if category in ('MC', 'MD', 'ME', 'MF'):
-            if value <= 5.03: return 1
-            return int(22.0 * (value - 5) ** 0.9)
-        elif category in ('KD', 'KE', 'KF'):
-            if value <= 8.04: return 1
-            return int(18.0 * (value - 8) ** 0.9)
-        elif category in ('MJ', 'MA', 'MB', 'KJ', 'KA', 'KB', 'KC'): # shotput
+    def ball(self, category, sex, value):
+        if category in ('U20', 'U18', 'U16'):  # shotput
             return 0
+        elif category in ('U14', 'U12', 'U10', 'U8'):
+            if sex == 'female':
+                if value <= 5.03: return 1
+                return int(22.0 * (value - 5) ** 0.9)
+            elif sex == 'male':
+                if value <= 8.04: return 1
+                return int(18.0 * (value - 8) ** 0.9)
+            else:
+                raise Exception("Invalid sex {}".format(sex))
         else:
-            raise Exception("Invalid category %s" % category)
+            raise Exception("Invalid category {}".format(category))
 
     # qualification
     FINAL_PER_CATEGORY = {
-        "KJ": { 'percent': 0.35, 'minimum': 2 },
-        "MJ": { 'percent': 0.35, 'minimum': 2 },
-        "KA": { 'percent': 0.35, 'minimum': 2 },
-        "MA": { 'percent': 0.35, 'minimum': 2 },
-        "KB": { 'percent': 0.35, 'minimum': 2 },
-        "MB": { 'percent': 0.35, 'minimum': 2 },
-        "KC": { 'percent': 0.20, 'minimum': 2 },
-        "MC": { 'percent': 0.20, 'minimum': 2 },
-        "KD": { 'percent': 0.20, 'minimum': 2 },
-        "MD": { 'percent': 0.20, 'minimum': 2 },
-        "KE": { 'percent': 0.20, 'minimum': 2 },
-        "ME": { 'percent': 0.20, 'minimum': 2 },
-        "KF": { 'percent': 0.00, 'minimum': 0 },
-        "MF": { 'percent': 0.00, 'minimum': 0 },
+        "female": {
+            "U20": { 'percent': 0.35, 'minimum': 2 },
+            "U18": { 'percent': 0.35, 'minimum': 2 },
+            "U16": { 'percent': 0.35, 'minimum': 2 },
+            "U14": { 'percent': 0.20, 'minimum': 2 },
+            "U12": { 'percent': 0.20, 'minimum': 2 },
+            "U10": { 'percent': 0.20, 'minimum': 2 },
+            "U8":  { 'percent': 0.00, 'minimum': 0 },
+        },
+        "male": {
+            "U20": { 'percent': 0.35, 'minimum': 2 },
+            "U18": { 'percent': 0.35, 'minimum': 2 },
+            "U16": { 'percent': 0.35, 'minimum': 2 },
+            "U14": { 'percent': 0.20, 'minimum': 2 },
+            "U12": { 'percent': 0.20, 'minimum': 2 },
+            "U10": { 'percent': 0.20, 'minimum': 2 },
+            "U8":  { 'percent': 0.00, 'minimum': 0 },
+        },
     }
 
-    def qualify_count_by_percent(self, category, total_athletes):
+    def qualify_count_by_percent(self, category, sex, total_athletes):
         """
         This resembles the original algorithm from juwe to calculate
         something similar to the percentual number of athletes allowed
         per category. There is' also a minimum.
         """
-        percent = self.FINAL_PER_CATEGORY[category]['percent']
-        minimum = self.FINAL_PER_CATEGORY[category]['minimum']
+        percent = self.FINAL_PER_CATEGORY[sex][category]['percent']
+        minimum = self.FINAL_PER_CATEGORY[sex][category]['minimum']
         if percent == 0.0 and minimum == 0:
             return 0
         qualified_number = max(int(total_athletes * percent) + 0.4, minimum)
         return qualified_number
 
     FINAL_BY_POINTS = {
-        "KJ": 1800,
-        "KA": 1800,
-        "KB": 1500,
-        "KC": 1300,
-        "KD": 900,
-        "KE": 700,
-        "KF": None,
-        "MJ": 1700,
-        "MA": 1700,
-        "MB": 1400,
-        "MC": 1300,
-        "MD": 900,
-        "ME": 700,
-        "MF": None,
+        "male": {
+            "U20": 1800,
+            "U18": 1800,
+            "U16": 1500,
+            "U14": 1300,
+            "U12": 900,
+            "U10": 700,
+            "U8": None,
+        },
+        "female": {
+            "U20": 1700,
+            "U18": 1700,
+            "U16": 1400,
+            "U14": 1300,
+            "U12": 900,
+            "U10": 700,
+            "U8": None,
+        }
     }
 
-    def qualified_by_points(self, category, points):
+    def qualified_by_points(self, category, sex, points):
         """
         Athletes reaching a minimum of points are qualified too
         """
-        limit = self.FINAL_BY_POINTS[category]
+        limit = self.FINAL_BY_POINTS[sex][category]
         if limit is None:
             return False
         return points >= limit
 
-    def has_extra_award(self, category, total_athletes, rank):
+    def has_extra_award(self, category, sex, total_athletes, rank):
         if rank <= 3:
             return False # the first three ranks already got awards
         n_awards = math.ceil(total_athletes * 0.30) # 30% rounded up
