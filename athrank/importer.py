@@ -109,6 +109,16 @@ class CSVImporter(object):
             value = header[n]
             if expected != value:
                 raise Exception('Expected header field %d is "%s" but got "%s"' % (n, expected, value))
+    def _category_from_age_and_sex(self, age_cohort, sex):
+        AgeCategory = athrank.db.AgeCategory
+        print 'XXX {!r} {!r}'.format(age_cohort, sex)
+        age_category = self.db.store.find(AgeCategory,
+            (AgeCategory.age_cohort == age_cohort) & (AgeCategory.sex == sex)).one()
+        if age_category is None:
+            print "XXX category not found {} {}".format(age_cohort, sex)
+            return None
+        return age_category.category
+
 
 class CSVAthleteImporter(CSVImporter):
     """
@@ -130,10 +140,14 @@ class CSVAthleteImporter(CSVImporter):
         u"Sektion": 'section',
         u"Name": 'lastname',
         u"Vorname": 'firstname',
-        u"Jahrgang": 'year_of_birth',
+        u"Jahrgang": 'age_cohort',
         u"G": 'sex',
         u"Kategorie": 'category',
     }
+
+    def __init__(self, db, add_to_year=0):
+        super(CSVAthleteImporter, self).__init__(db)
+        self._add_to_year = add_to_year
 
     def read(self, filename):
         reader = UnicodeReader(open(filename, 'rb'), RFC4180)
@@ -152,11 +166,10 @@ class CSVAthleteImporter(CSVImporter):
 
         athlete.firstname = data['firstname']
         athlete.lastname = data['lastname']
-        athlete.category = data['category']
-        athlete.section = self._section_to_id(data['section'])
+        athlete.age_cohort = int(data['age_cohort']) + self._add_to_year
         athlete.sex = self._convert_sex(data['sex'])
-        athlete.year_of_birth = int(data['year_of_birth'])
-        athlete.category_code = data['category'][1]
+        athlete.id_section = self._section_to_id(data['section'])
+        athlete.category = self._category_from_age_and_sex(athlete.age_cohort, athlete.sex)
 
         self.db.store.add(athlete)
 
@@ -164,7 +177,7 @@ class CSVAthleteImporter(CSVImporter):
         return record[self.fields[name]]
 
     def _convert_sex(self, v):
-        return {'k':'m', 'm': 'f'}[v.lower()]
+        return {'k':'male', 'm': 'female'}[v.lower()].decode('utf-8')
 
     def record_to_dict(self, record):
         d = {}
@@ -217,7 +230,7 @@ class CSVJuweImporter(CSVImporter):
         u"StartNummer": 'number',
         u"Name": 'name',
         u"Sektion": 'section',
-        u"Jahrgang": 'year_of_birth',
+        u"Jahrgang": 'age_cohort',
         u"Geschlecht": 'sex',
         u"Kategorie": 'category',
         u"SprintResultat": 'sprint_result',
@@ -261,9 +274,9 @@ class CSVJuweImporter(CSVImporter):
         athlete.firstname = firstname
         athlete.lastname = lastname
         to_year = lambda x: (2000 + x) if x < 50 else (1900 + x)
-        athlete.age_cohort = to_year(int(data['year_of_birth'])) + self._add_to_year
+        athlete.age_cohort = to_year(int(data['age_cohort'])) + self._add_to_year
         athlete.sex = self._convert_sex(data['sex'])
-        athlete.category = self._convert_category(athlete.age_cohort, athlete.sex)
+        athlete.category = self._category_from_age_and_sex(athlete.age_cohort, athlete.sex)
         athlete.id_section = self._section_to_id(data['section'])
 
         to_result = lambda r: decimal.Decimal(r) if len(r) > 0 else None
@@ -283,10 +296,4 @@ class CSVJuweImporter(CSVImporter):
 
     def _convert_sex(self, sex):
         return { 'w': 'female', 'm': 'male'}[sex.lower()]
-
-    def _convert_category(self, age_cohort, sex):
-        AgeCategory = athrank.db.AgeCategory
-        age_category = self.db.store.find(AgeCategory,
-            (AgeCategory.age_cohort == age_cohort) & (AgeCategory.sex == sex)).one()
-        return age_category.category
 

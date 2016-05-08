@@ -37,6 +37,7 @@ class DB(object):
         self._store = None
         self._init_config()
 
+
     @property
     def config(self):
         return self._config
@@ -109,26 +110,42 @@ class Section(object):
     name = Unicode()
     canton = Unicode()
 
+class Sexes(object):
+    __storm_table__ = 'sexes'
+    sex = Unicode(primary=True)
+
+class Categories(object):
+    __storm_table__ = 'categories'
+    category = Unicode(primary=True)
+
+class Awards(object):
+    __storm_table__ = 'awards'
+    award = Unicode(primary=True)
+
 class Category(object):
     __storm_table__ = 'category'
     __storm_primary__ = ('category', 'sex')
     category = Enum(map=dict((x, x) for x in CATEGORIES))
-    sex = Enum(map=dict((x, x) for x in SEXES))
+    sex = Unicode()
     sprint_distance = Int()
     has_longjump = Bool()
     has_highjump = Bool()
     has_shotput = Bool()
     has_ball = Bool()
     has_endurance_run = Bool()
+    r_category = Reference(category, Categories.category)
+    r_sex = Reference(sex, Sexes.sex)
 
 class AgeCategory(object):
     __storm_table__ = 'agecategory'
     __storm_primary__ = ('age_cohort', 'sex')
     age_cohort = Int()
-    sex = Enum(map=dict((x, x) for x in SEXES))
-    category = Enum(map=dict((x, x) for x in CATEGORIES))
+    sex = Unicode()
+    category = Unicode()
     age = Int()
     r_category = ReferenceSet((category, sex), (Category.category, Category.sex))
+    r_sex = Reference(sex, Sexes.sex)
+    r_category = Reference(category, Categories.category)
 
 class Athlete(object):
     __storm_table__ = 'athlete'
@@ -138,8 +155,8 @@ class Athlete(object):
     lastname = Unicode()
     id_section = Int()
     age_cohort = Int()
-    sex = Enum(map=dict((x, x) for x in SEXES))
-    category = Enum(map=dict((x, x) for x in CATEGORIES))
+    sex = Unicode()
+    category = Unicode()
     sprint_result = Decimal()
     longjump_result = Decimal()
     highjump_result = Decimal()
@@ -158,8 +175,11 @@ class Athlete(object):
     qualified = Bool()
     verified = Bool()
     r_section = Reference(id_section, Section.id_section)
-    r_category = Reference((category, sex), (Category.category, Category.sex))
-    r_age_category = Reference((age_cohort, sex), (AgeCategory.age_cohort, AgeCategory.sex))
+    r_category_sex = Reference((category, sex), (Category.category, Category.sex))
+    r_age_cohort_sex = Reference((age_cohort, sex), (AgeCategory.age_cohort, AgeCategory.sex))
+    r_category = Reference(category, Categories.category)
+    r_sex = Reference(sex, Sexes.sex)
+    r_award = Reference(award, Awards.award)
 
     def __init__(self, **kwargs):
         for name, value in kwargs.iteritems():

@@ -51,7 +51,7 @@ args = parser.parse_args()
 db = athrank.db.DB()
 
 if args.format == 'athlete':
-    importer = athrank.importer.CSVAthleteImporter(db)
+    importer = athrank.importer.CSVAthleteImporter(db, add_to_year=args.add_to_year)
 else:
     importer = athrank.importer.CSVJuweImporter(db, add_to_year=args.add_to_year)
 
