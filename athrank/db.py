@@ -125,7 +125,7 @@ class Awards(object):
 class Category(object):
     __storm_table__ = 'category'
     __storm_primary__ = ('category', 'sex')
-    category = Enum(map=dict((x, x) for x in CATEGORIES))
+    category = Unicode()
     sex = Unicode()
     sprint_distance = Int()
     has_longjump = Bool()
