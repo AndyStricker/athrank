@@ -45,15 +45,16 @@ class RankingReport(Report):
     def get_namespace(self):
         categories = self._get_category_list()
         rank_lists = []
-        for category in categories:
+        for sex, category in categories:
             ranks = self.db.store.find(
                 athrank.db.Athlete,
                 athrank.db.Athlete.total_points > 0,
+                sex=sex,
                 category=category
             )
             ranks.order_by(athrank.db.Athlete.rank, athrank.db.Athlete.number)
             if ranks.count() > 0:
-                rank_lists.append((category, ranks))
+                rank_lists.append((sex, category, ranks))
         return {
             'title': self.TITLE,
             'categories': rank_lists,
@@ -63,13 +64,13 @@ class RankingReport(Report):
         db_categories = self.db.store.find(athrank.db.Category)
         category_set = set()
         for category in db_categories:
-            category_set.add(category.category)
+            category_set.add((category.sex, category.category))
         categories = list(category_set)
         def category_cmp(a, b):
             s = cmp(a[0], b[0])
             if s != 0:
-                return -1 * s
+                return s
             else:
-                return cmp(a[1:], b[1:])
+                return -1 * cmp(int(a[1][1:]), int(b[1][1:]))
         categories.sort(cmp=category_cmp)
         return categories

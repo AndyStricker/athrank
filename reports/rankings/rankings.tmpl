@@ -22,8 +22,13 @@ thead .name, thead .section { text-align: left }
 </head>
 <body>
 <h1>$title</h1>
-#for $category, $ranklist in $categories
-<h2>Kategorie $category</h2>
+#for $sex, $category, $ranklist in $categories
+#if $sex == 'male'
+#set $gender = 'Knaben'
+#else
+#set $gender = 'Mädchen'
+#end if
+<h2>Kategorie $gender $category</h2>
 <table>
   <thead>
     <tr>
@@ -45,7 +50,7 @@ thead .name, thead .section { text-align: left }
     <td class="rank">$athlete.rank</td>
     <td class="name">$athlete.lastname $athlete.firstname</td>
     <td class="section">$athlete.r_section.name</td>
-    <td class="age_cohort">$athlete.year_of_birth</td>
+    <td class="age_cohort">$athlete.age_cohort</td>
     <td class="discipline result">$athlete.sprint_result</td>
     <td class="discipline result">$athlete.longjump_result</td>
     <td class="discipline result">#if $athlete.highjump_result then $athlete.highjump_result else ''#</td>
