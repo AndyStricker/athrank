@@ -56,7 +56,8 @@ CREATE TABLE athlete (
     award character varying(6),
     qualified boolean DEFAULT false NOT NULL,
     rank integer,
-    verified boolean DEFAULT false NOT NULL
+    verified boolean DEFAULT false NOT NULL,
+    category character varying(3) NOT NULL
 );
 
 
@@ -276,6 +277,14 @@ ALTER TABLE ONLY agecategory
 
 ALTER TABLE ONLY athlete
     ADD CONSTRAINT athlete_award_fkey FOREIGN KEY (award) REFERENCES awards(award);
+
+
+--
+-- Name: athlete_category_fkey; Type: FK CONSTRAINT; Schema: public; Owner: jugiuser
+--
+
+ALTER TABLE ONLY athlete
+    ADD CONSTRAINT athlete_category_fkey FOREIGN KEY (category) REFERENCES categories(category);
 
 
 --
