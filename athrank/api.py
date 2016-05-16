@@ -24,12 +24,14 @@ sys.path.append(os.getcwd())
 import web
 import web.webapi
 import json
+import decimal
 import athrank.db
 import athrank.ranking
 import athrank.report
 
 from web.contrib.template import render_cheetah
 import Cheetah.Template
+
 
 PREFIX = '/v1'
 urls = (
@@ -47,6 +49,16 @@ urls = (
 
 def _create_api_path(resource, rid):
     return '{0}/{1}/{2}'.format(PREFIX, resource, rid)
+
+
+class JSONEncoder(json.JSONEncoder):
+    def default(self, o):
+        if isinstance(o, decimal.Decimal):
+            return float(o)
+        return json.JSONEncoder.default(self, o)
+
+api_json_encoder = JSONEncoder()
+
 
 class Index:
     def GET(self):
@@ -110,6 +122,8 @@ class Athletes(AthleteBase):
             query.append(athrank.db.Athlete.lastname == params['lastname'])
         if params.has_key('category') and len(params['category']) > 0:
             query.append(athrank.db.Athlete.category == params['category'])
+        if params.has_key('sex') and len(params['sex']) > 0:
+            query.append(athrank.db.Athlete.sex == params['sex'])
         if params.has_key('section') and len(params['section']) > 0:
             query.append(athrank.db.Athlete.r_section == athrank.db.Section.id_section)
             query.append(athrank.db.Section.name == params['section'])
@@ -119,7 +133,7 @@ class Athletes(AthleteBase):
             result.append(self.get_athlete_dict(athlete))
 
         web.header('Content-Type', 'application/json')
-        return json.dumps({
+        return api_json_encoder.encode({
             'count': len(result),
             'result': result,
         })
@@ -173,7 +187,7 @@ class Athletes(AthleteBase):
         web.header('Location', _create_api_path('athlete', athlete.id_athlete))
         web.header('Content-Type', 'application/json')
         obj = self.get_athlete_dict(athlete)
-        return json.dumps(obj)
+        return api_json_encoder.encode(obj)
 
 class Athlete(AthleteBase):
     def GET(self, id_athlete):
@@ -183,7 +197,7 @@ class Athlete(AthleteBase):
             raise web.notfound(message='Athlete with this id not found')
         obj = self.get_athlete_dict(athlete)
         web.header('Content-Type', 'application/json')
-        return json.dumps(obj)
+        return api_json_encoder.encode(obj)
 
     def PUT(self, id_athlete):
         attributes = web.input(_unicode=True)
@@ -196,7 +210,7 @@ class AthleteStartNumber(AthleteBase):
             raise web.notfound(message='No Athlete with this start number found')
         obj = self.get_athlete_dict(athlete.one())
         web.header('Content-Type', 'application/json')
-        return json.dumps(obj)
+        return api_json_encoder.encode(obj)
 
 class CategoryBase(object):
     CATEGORY_ATTRIBUTES = athrank.db.get_relation_fields(athrank.db.Category)
@@ -219,7 +233,7 @@ class Categories(CategoryBase):
             result.append(self.get_category_dict(category))
 
         web.header('Content-Type', 'application/json')
-        return json.dumps({
+        return api_json_encoder.encode({
             'count': len(result),
             'result': result,
         })
@@ -237,7 +251,7 @@ class Category(CategoryBase):
         obj = self.get_category_dict(category.one())
 
         web.header('Content-Type', 'application/json')
-        return json.dumps(obj)
+        return api_json_encoder.encode(obj)
 
 class AgeCategory(CategoryBase):
     def GET(self, age_cohort, sex):
@@ -253,7 +267,7 @@ class AgeCategory(CategoryBase):
         obj = self.get_category_dict(category)
 
         web.header('Content-Type', 'application/json')
-        return json.dumps(obj)
+        return api_json_encoder.encode(obj)
 
 class Sections:
     SECTION_ATTRIBUTES = athrank.db.get_relation_fields(athrank.db.Section)
@@ -265,7 +279,7 @@ class Sections:
             result.append(self.get_section_dict(section))
 
         web.header('Content-Type', 'application/json')
-        return json.dumps({
+        return api_json_encoder.encode({
             'count': len(result),
             'result': result,
         })
