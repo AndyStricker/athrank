@@ -124,9 +124,15 @@ class Athletes(AthleteBase):
             query.append(athrank.db.Athlete.category == params['category'])
         if params.has_key('sex') and len(params['sex']) > 0:
             query.append(athrank.db.Athlete.sex == params['sex'])
+        if params.has_key('number') and len(params['number']) > 0:
+            query.append(athrank.db.Athlete.number == int(params['number']))
         if params.has_key('section') and len(params['section']) > 0:
             query.append(athrank.db.Athlete.r_section == athrank.db.Section.id_section)
             query.append(athrank.db.Section.name == params['section'])
+        if params.has_key('name') and len(params['name']) > 0:
+            name_query = params['name'].replace('%', '%%').replace('*', '%').replace('_', '__').replace('?', '_').strip()
+            query.append(athrank.db.Athlete.firstname.like(name_query) |
+                         athrank.db.Athlete.lastname.like(name_query))
         athletes = db.store.find(athrank.db.Athlete, *tuple(query))
         result = []
         for athlete in athletes:
