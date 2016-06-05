@@ -106,6 +106,14 @@ class AthleteBase(object):
             'href': _create_api_path('category', obj['category']),
         }
         return obj
+    def update_from_dict(self, athlete, data):
+        for name in self.ATHLETE_ATTRIBUTES:
+            field_type = type(getattr(athlete, name))
+            if field_type is decimal.Decimal:
+                v = data.get(name)
+                setattr(athlete, name, decimal.Decimal(v) if not v is None else None)
+            else:
+                setattr(athlete, name, data.get(name))
 
 class Athletes(AthleteBase):
     def GET(self, slash=False):
@@ -134,6 +142,7 @@ class Athletes(AthleteBase):
             query.append(athrank.db.Athlete.firstname.like(name_query) |
                          athrank.db.Athlete.lastname.like(name_query))
         athletes = db.store.find(athrank.db.Athlete, *tuple(query))
+        athletes.order_by(athrank.db.Athlete.number)
         result = []
         for athlete in athletes:
             result.append(self.get_athlete_dict(athlete))
@@ -206,7 +215,15 @@ class Athlete(AthleteBase):
         return api_json_encoder.encode(obj)
 
     def PUT(self, id_athlete):
-        attributes = web.input(_unicode=True)
+        data = json.loads(web.data())
+        db = athrank.db.DB()
+        athlete = db.store.get(athrank.db.Athlete, int(id_athlete))
+        if athlete is None:
+            raise web.notfound(message='Athlete with this not found')
+        self.update_from_dict(athlete, data)
+        db.store.commit()
+        obj = self.get_athlete_dict(athlete)
+        return api_json_encoder.encode(obj)
 
 class AthleteStartNumber(AthleteBase):
     def GET(self, number):
