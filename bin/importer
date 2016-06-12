@@ -42,6 +42,14 @@ parser.add_argument(
         help="To allow older juwe imports w/o changing categories add this to the years"
 )
 parser.add_argument(
+    '--age-notation', metavar="NOTATION",
+        choices=('fm', 'mk'),
+        type=str,
+        dest="age_notation",
+        default="fm",
+        help="How male and female are differentiated by shortcuts"
+)
+parser.add_argument(
     'filename',
         type=str,
         help="Filename of the import file"
@@ -51,7 +59,9 @@ args = parser.parse_args()
 db = athrank.db.DB()
 
 if args.format == 'athlete':
-    importer = athrank.importer.CSVAthleteImporter(db, add_to_year=args.add_to_year)
+    importer = athrank.importer.CSVAthleteImporter(db,
+        add_to_year=args.add_to_year,
+        age_notation=args.age_notation)
 else:
     importer = athrank.importer.CSVJuweImporter(db, add_to_year=args.add_to_year)
 

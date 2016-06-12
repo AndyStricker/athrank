@@ -154,8 +154,9 @@ class CSVAthleteImporter(CSVImporter):
         u"Kategorie": 'category',
     }
 
-    def __init__(self, db, add_to_year=0):
+    def __init__(self, db, add_to_year=0, age_notation='fm'):
         super(CSVAthleteImporter, self).__init__(db)
+        self.age_notation = age_notation
         self._add_to_year = add_to_year
 
     def _insert(self, record):
@@ -175,7 +176,12 @@ class CSVAthleteImporter(CSVImporter):
         return record[self.fields[name]]
 
     def _convert_sex(self, v):
-        return {'k': u'male', 'm': u'female'}[v.lower()]
+        if self.age_notation == 'mk':
+            return {'k': u'male', 'm': u'female'}[v.lower()]
+        elif self.age_notation == 'fm':
+            return {'m': u'male', 'f': u'female'}[v.lower()]
+        else:
+            raise Exception('Age notation {!r} not known'.format(self.age_notation))
 
     def record_to_dict(self, record):
         d = {}
