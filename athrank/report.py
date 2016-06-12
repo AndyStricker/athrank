@@ -24,7 +24,7 @@ class Report(object):
     pass
 
 class RankingReport(Report):
-    TITLE = 'Rangliste Jugendriegentag 2013 Satus Neuhausen'
+    TITLE = 'Rangliste Kantonaler Jugendriegentag 2016 Satus Neuhausen'
 
     def __init__(self, db, path='reports/rankings/', filename='rankings.tmpl'):
         self._db = db
