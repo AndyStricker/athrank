@@ -109,11 +109,11 @@ class AthleteBase(object):
     def update_from_dict(self, athlete, data):
         for name in self.ATHLETE_ATTRIBUTES:
             field_type = type(getattr(athlete, name))
-            if field_type is decimal.Decimal:
-                v = data.get(name)
+            v = data.get(name)
+            if field_type is decimal.Decimal or type(v) is float:
                 setattr(athlete, name, decimal.Decimal(v) if not v is None else None)
             else:
-                setattr(athlete, name, data.get(name))
+                setattr(athlete, name, v)
 
 class Athletes(AthleteBase):
     def GET(self, slash=False):
