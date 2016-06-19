@@ -1,0 +1,26 @@
+Initial Setup commands
+======================
+
+Create database and user
+------------------------
+
+sudo -u postgres -s
+postgres@host$ createdb athrank
+postgres@host$ createuser -S -D -R jugiuser
+postgres@host$ psql
+postgres=# ALTER USER jugiuser WITH PASSWORD 'secret';
+
+
+Create relations
+----------------
+
+user@host$ psql -h localhost -p 5432 -u jugiuser athrank
+
+athrank=> \i db/awards.sql 
+athrank=> \i db/sexes.sql 
+athrank=> \i db/sections.sql 
+athrank=> \i db/categories.sql 
+athrank=> \i db/category.sql 
+athrank=> \i db/agecategory.sql 
+
+athrank=> \i participants.sql
