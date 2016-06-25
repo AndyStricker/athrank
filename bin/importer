@@ -28,11 +28,11 @@ import athrank.db
 parser = argparse.ArgumentParser(description='Batch import files')
 parser.add_argument(
     '--format', metavar='FORMAT',
-        choices=('athlete', 'juwe'),
+        choices=('athlete', 'ranking', 'juwe'),
         type=str,
         dest='format',
         default='athlete',
-        help="Type of file format to read: athlete (default), juwe"
+        help="Type of file format to read: athlete (default), ranking, juwe"
 )
 parser.add_argument(
     '--add-to-year', metavar="YEARS",
@@ -60,6 +60,10 @@ db = athrank.db.DB()
 
 if args.format == 'athlete':
     importer = athrank.importer.CSVAthleteImporter(db,
+        add_to_year=args.add_to_year,
+        age_notation=args.age_notation)
+elif args.format == 'ranking':
+    importer = athrank.importer.CSVRankingImporter(db,
         add_to_year=args.add_to_year,
         age_notation=args.age_notation)
 else:

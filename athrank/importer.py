@@ -189,6 +189,83 @@ class CSVAthleteImporter(CSVImporter):
             d[fieldname] = record[self.fields[csvfield]]
         return d
 
+class CSVRankingImporter(CSVImporter):
+    """
+    Importer for batch import of athletes from CSV ranking file.
+    """
+    CHECK_HEADER_MAX = 13
+    HEADER = (
+        u"id_athlete",
+        u"number",
+        u"firstname",
+        u"lastname",
+        u"section",
+        u"year_of_birth",
+        u"sex",
+        u"category",
+        u"sprint_result",
+        u"longjump_result",
+        u"highjump_result",
+        u"shotput_result",
+        u"ball_result",
+        u"verified",
+    )
+    IMPORT_FIELDS = {
+        u"number": 'number',
+        u"firstname": 'firstname',
+        u"lastname": 'lastname',
+        u"section": 'section',
+        u"year_of_birth": 'age_cohort',
+        u"sex": 'sex',
+        u"category": 'category',
+        u"sprint_result": 'sprint_result',
+        u"longjump_result": 'longjump_result',
+        u"highjump_result": 'highjump_result',
+        u"shotput_result": 'shotput_result',
+        u"ball_result": 'ball_result',
+        u"verified": 'verified',
+    }
+
+    def __init__(self, db, add_to_year=0, age_notation='fm'):
+        super(CSVRankingImporter, self).__init__(db)
+        self.age_notation = age_notation
+        self._add_to_year = add_to_year
+
+    def _insert(self, record):
+        data = self.record_to_dict(record)
+        athlete = self.db.create('athlete')
+
+        athlete.number = int(data['number'])
+        athlete.firstname = data['firstname']
+        athlete.lastname = data['lastname']
+        athlete.age_cohort = int(data['age_cohort']) + self._add_to_year
+        athlete.sex = self._convert_sex(data['sex'])
+        athlete.id_section = self._section_to_id(data['section'])
+        athlete.category = self._category_from_age_and_sex(athlete.age_cohort, athlete.sex)
+
+        to_result = lambda r: decimal.Decimal(r) if len(r) > 0 else None
+        athlete.sprint_result = to_result(data['sprint_result'])
+        athlete.longjump_result = to_result(data['longjump_result'])
+        athlete.highjump_result = to_result(data['highjump_result'])
+        athlete.shotput_result = to_result(data['shotput_result'])
+        athlete.ball_result = to_result(data['ball_result'])
+
+        self.db.store.add(athlete)
+
+    def _convert_sex(self, v):
+        if self.age_notation == 'mk':
+            return {'k': u'male', 'm': u'female'}[v.lower()]
+        elif self.age_notation == 'fm':
+            return {'m': u'male', 'f': u'female'}[v.lower()]
+        else:
+            raise Exception('Age notation {!r} not known'.format(self.age_notation))
+
+    def record_to_dict(self, record):
+        d = {}
+        for csvfield, fieldname in self.IMPORT_FIELDS.iteritems():
+            d[fieldname] = record[self.fields[csvfield]]
+        return d
+
 class CSVJuweImporter(CSVImporter):
     """
     Importer for juwe exports stored as CSV.
